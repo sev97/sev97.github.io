@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academy - OpenQuant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0c15; color: #e2e8f0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const navLinks = [
+            { href: "openquant.html", label: "首页" },
+            { href: "dashboard.html", label: "控制台" },
+            { href: "lab.html", label: "量化实验室" },
+            { href: "marketplace.html", label: "策略广场" },
+            { href: "data-center.html", label: "数据中心" },
+            { href: "academy.html", label: "学院" },
+            { href: "pricing.html", label: "价格" },
+            { href: "solutions.html", label: "解决方案" },
+            { href: "community.html", label: "社区" },
+        ];
+
+        const Navbar = () => (
+            <nav className="fixed top-0 w-full z-50 bg-[#0b0c15]/90 backdrop-blur-md border-b border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <a href="openquant.html" className="flex items-center gap-2 cursor-pointer">
+                            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/20">
+                                <span className="font-bold text-white text-lg">O</span>
+                            </div>
+                            <span className="font-bold text-xl tracking-tight text-white">OpenQuant</span>
+                        </a>
+                        <div className="hidden md:block">
+                            <div className="ml-10 flex items-center gap-1 text-sm font-medium">
+                                {navLinks.map(link => (
+                                    <a key={link.href} href={link.href} className={`whitespace-nowrap px-3 py-2 rounded-md transition-colors ${link.href === "academy.html" ? "text-green-400 border-b-2 border-green-400" : "text-gray-300 hover:text-green-400"}`}>
+                                        {link.label}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="hidden md:flex items-center gap-2 text-xs text-gray-400 bg-gray-900 px-3 py-1 rounded-full border border-gray-800">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                Co-location Active
+                            </div>
+                            <button className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-lg shadow-green-900/20">
+                                登录 / 注册
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        );
+
+        const Hero = () => (
+            <section className="pt-28 pb-16 bg-gradient-to-b from-[#0b0c15] to-[#131628] text-center">
+                <div className="max-w-4xl mx-auto px-4">
+                    <span className="text-xs text-indigo-300 tracking-widest font-semibold">OPENQUANT ACADEMY</span>
+                    <h1 className="text-4xl sm:text-5xl font-extrabold text-white mt-4 mb-6">量化学院 · 从入门到实盘</h1>
+                    <p className="text-gray-400 text-lg mb-8">
+                        全栈课程涵盖 Python / Rust 策略开发、回测与风控、实盘部署、Co-location 实操，辅以导师批改与 AI Copilot。
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-4">
+                        <a href="#tracks" className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-lg font-semibold">查看课程路径</a>
+                        <a href="#events" className="bg-[#161822] border border-gray-700 hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-semibold">报名直播营</a>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const tracks = [
+            { title: "Level 1 · 入门", desc: "Python 语言、量化基础、API 调用、数据清洗", duration: "2 周", modules: 6, color: "from-blue-500/20 to-blue-500/5" },
+            { title: "Level 2 · 策略", desc: "因子研究、超高频、套利策略、风控评估", duration: "4 周", modules: 8, color: "from-green-500/20 to-green-500/5" },
+            { title: "Level 3 · 实盘", desc: "Rust 加速、Co-location、OMS/EMS、监控报警", duration: "3 周", modules: 7, color: "from-purple-500/20 to-purple-500/5" },
+        ];
+
+        const Tracks = () => (
+            <section id="tracks" className="py-16">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="flex items-center justify-between mb-10">
+                        <div>
+                            <h2 className="text-3xl font-bold text-white mb-2">课程路径</h2>
+                            <p className="text-gray-500">循序渐进的 3 层进阶体系，全部配套练习与项目。</p>
+                        </div>
+                        <a href="#" className="text-sm text-green-400 font-semibold hover:text-green-200">下载课程大纲 →</a>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {tracks.map((track, idx) => (
+                            <div key={idx} className={`bg-gradient-to-br ${track.color} border border-gray-800 rounded-2xl p-6 flex flex-col`}>
+                                <p className="text-xs uppercase text-gray-400">{track.duration} · {track.modules} 模块</p>
+                                <h3 className="text-2xl font-semibold text-white my-3">{track.title}</h3>
+                                <p className="text-gray-400 flex-grow">{track.desc}</p>
+                                <button className="mt-4 bg-black/30 hover:bg-black/40 text-white text-sm px-4 py-2 rounded-lg border border-white/10">详情</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const liveEvents = [
+            { title: "Rust 高频执行引擎实战", mentor: "OpenQuant CTO", time: "每周三 · 20:00", seats: "限额 80 人" },
+            { title: "API Driven 资金监控工作坊", mentor: "Fusion PM", time: "每周六 · 10:00", seats: "限额 50 人" },
+            { title: "链上数据套利训练营", mentor: "On-chain Lead", time: "每周日 · 14:00", seats: "限额 60 人" },
+        ];
+
+        const LiveEvents = () => (
+            <section id="events" className="py-16 bg-[#111322] border-y border-gray-800">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10 gap-6">
+                        <div>
+                            <h2 className="text-3xl font-bold text-white mb-2">直播营 & Workshop</h2>
+                            <p className="text-gray-400">导师带练 + 实时答疑，完成后可领取实盘券。</p>
+                        </div>
+                        <button className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg">预约试听</button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {liveEvents.map((event, idx) => (
+                            <div key={idx} className="bg-[#161822] border border-gray-800 rounded-xl p-5">
+                                <h3 className="text-xl font-semibold text-white mb-2">{event.title}</h3>
+                                <p className="text-sm text-gray-400 mb-3">导师：{event.mentor}</p>
+                                <p className="text-sm text-gray-400 mb-1">{event.time}</p>
+                                <p className="text-xs text-gray-500"> {event.seats}</p>
+                                <button className="mt-4 text-sm text-green-400 font-semibold">立即报名 →</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Certification = () => (
+            <section className="py-16">
+                <div className="max-w-5xl mx-auto px-4 text-center">
+                    <h2 className="text-3xl font-bold text-white mb-4">认证体系 & 合作高校</h2>
+                    <p className="text-gray-400 mb-8">
+                        完成全套课程可获得 OpenQuant 量化工程师证书，并可推荐进入合作机构面试。高校合作包括：清华五道口、上财量化研修、HKUST。
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {["学习路径 · 可视化", "实验室实训 · 真交易所", "就业服务 · 内推"].map((item, idx) => (
+                            <div key={idx} className="bg-[#161822] border border-gray-800 rounded-xl p-6">
+                                <h3 className="text-xl font-semibold text-white mb-2">{item}</h3>
+                                <p className="text-gray-500 text-sm">提供项目档案 & Mentor 反馈，双语支持。</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Footer = () => (
+            <footer className="bg-[#0b0c15] py-10 border-t border-gray-900 text-center text-gray-500 text-sm">
+                <p>© 2025 OpenQuant Academy · Learn at the Speed of Light</p>
+            </footer>
+        );
+
+        const App = () => (
+            <div className="min-h-screen bg-[#0b0c15] text-gray-200">
+                <Navbar />
+                <main>
+                    <Hero />
+                    <Tracks />
+                    <LiveEvents />
+                    <Certification />
+                </main>
+                <Footer />
+            </div>
+        );
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+
+

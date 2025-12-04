@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solutions - OpenQuant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0c15; color: #e2e8f0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const navLinks = [
+            { href: "openquant.html", label: "首页" },
+            { href: "dashboard.html", label: "控制台" },
+            { href: "lab.html", label: "量化实验室" },
+            { href: "marketplace.html", label: "策略广场" },
+            { href: "data-center.html", label: "数据中心" },
+            { href: "academy.html", label: "学院" },
+            { href: "pricing.html", label: "价格" },
+            { href: "solutions.html", label: "解决方案" },
+            { href: "community.html", label: "社区" },
+        ];
+
+        const Navbar = () => (
+            <nav className="fixed top-0 w-full z-50 bg-[#0b0c15]/90 backdrop-blur-md border-b border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <a href="openquant.html" className="flex items-center gap-2 cursor-pointer">
+                            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/20">
+                                <span className="font-bold text-white text-lg">O</span>
+                            </div>
+                            <span className="font-bold text-xl tracking-tight text-white">OpenQuant</span>
+                        </a>
+                        <div className="hidden md:block">
+                            <div className="ml-10 flex items-center gap-1 text-sm font-medium">
+                                {navLinks.map(link => (
+                                    <a key={link.href} href={link.href} className={`whitespace-nowrap px-3 py-2 rounded-md transition-colors ${link.href === "solutions.html" ? "text-green-400 border-b-2 border-green-400" : "text-gray-300 hover:text-green-400"}`}>
+                                        {link.label}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="hidden md:flex items-center gap-2 text-xs text-gray-400 bg-gray-900 px-3 py-1 rounded-full border border-gray-800">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                Co-location Active
+                            </div>
+                            <button className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-lg shadow-green-900/20">
+                                登录 / 注册
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        );
+
+        const industries = [
+            { title: "量化私募", kpi: "+32% alpha", desc: "管理 30 亿资金的多策略私募，通过 Co-location 降低 87% 延迟，季度换手成本下降 12%。", stack: ["Rust 执行引擎", "OMS 风控", "实盘监控"] },
+            { title: "做市商", kpi: "-5ms latency", desc: "跨 6 交易所报价，利用 OpenQuant 的合规本地机柜与撮合 API，实现 99.99% 稳定在线。", stack: ["托管机柜", "裸金属", "延迟监控"] },
+            { title: "自营交易", kpi: "+18% capacity", desc: "传统券商团队接入 OpenQuant API，将 Python 策略迁移到 Rust 内核，单笔成交耗时降至 120µs。", stack: ["策略翻译", "风控编排", "报告中心"] },
+        ];
+
+        const IndustryGrid = () => (
+            <section className="pt-28 pb-16">
+                <div className="max-w-6xl mx-auto px-4 text-center">
+                    <h1 className="text-4xl font-bold text-white mb-4">面向不同类型机构的解决方案</h1>
+                    <p className="text-gray-400 mb-10">从策略研发、回测到实盘执行、运维监控，打造全链路基础设施。</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                        {industries.map(item => (
+                            <div key={item.title} className="bg-[#161822] border border-gray-800 rounded-2xl p-6">
+                                <div className="text-xs text-green-400 font-mono mb-2">{item.kpi}</div>
+                                <h3 className="text-2xl font-semibold text-white mb-2">{item.title}</h3>
+                                <p className="text-gray-400 text-sm mb-4">{item.desc}</p>
+                                <div className="flex flex-wrap gap-2 text-xs text-gray-300">
+                                    {item.stack.map(tag => <span key={tag} className="px-2 py-1 rounded-full bg-white/5 border border-white/10">{tag}</span>)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Workflow = () => (
+            <section className="py-16 bg-[#111322] border-y border-gray-800">
+                <div className="max-w-5xl mx-auto px-4">
+                    <h2 className="text-3xl font-bold text-white text-center mb-10">交付流程</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        {[
+                            { step: "01", title: "评估", desc: "性能瓶颈 / 安全审计 / 合规需求评估" },
+                            { step: "02", title: "架构", desc: "部署拓扑、席位规划、算力估算" },
+                            { step: "03", title: "迁移", desc: "策略移植、数据同步、风控演练" },
+                            { step: "04", title: "运维", desc: "7x24 NOC、延迟监控、季度优化报告" },
+                        ].map(item => (
+                            <div key={item.step} className="bg-[#161822] border border-gray-800 rounded-xl p-5 text-center">
+                                <p className="text-sm text-gray-500 font-mono">{item.step}</p>
+                                <h3 className="text-xl text-white font-semibold my-2">{item.title}</h3>
+                                <p className="text-gray-400 text-sm">{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const CaseStudies = () => (
+            <section className="py-16">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10 gap-6">
+                        <div>
+                            <h2 className="text-3xl font-bold text-white mb-2">客户案例</h2>
+                            <p className="text-gray-400">覆盖亚洲、北美与欧洲的 60+ 家对冲基金与交易团队。</p>
+                        </div>
+                        <a href="pricing.html" className="text-sm text-green-400 font-semibold hover:text-green-200">获取详细白皮书 →</a>
+                    </div>
+                    <div className="space-y-6">
+                        {[
+                            { client: "Vertex Quant · 香港", result: "将 12 套 CTA 策略迁移至 OpenQuant，回测性能提升 45x，实盘滑点下降 18%。" },
+                            { client: "Apex MM · 新加坡", result: "部署多机房 co-lo，跨交易所延迟稳定在 8ms 以内，异常监控自动切换冗余线路。" },
+                            { client: "Zenith Securities · 纽约", result: "利用 OpenQuant Academy + Copilot 训练 30 名交易员，开发周期缩短 40%。" },
+                        ].map(item => (
+                            <div key={item.client} className="bg-[#161822] border border-gray-800 rounded-xl p-5 flex flex-col md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-500 uppercase tracking-widest">{item.client}</p>
+                                    <p className="text-white text-lg mt-2">{item.result}</p>
+                                </div>
+                                <button className="mt-4 md:mt-0 text-sm text-green-400 font-semibold">查看方案</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const CTA = () => (
+            <section className="py-16">
+                <div className="max-w-4xl mx-auto px-4 text-center bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/40 rounded-3xl p-10">
+                    <h2 className="text-3xl font-bold text-white mb-4">需要专属方案？我们为你定制</h2>
+                    <p className="text-gray-300 mb-8">填写业务需求，48 小时内完成解决方案初稿与成本估算。</p>
+                    <div className="flex flex-wrap justify-center gap-4">
+                        <a href="mailto:sales@openquant.com" className="bg-white text-[#0b0c15] font-semibold px-8 py-3 rounded-lg">sales@openquant.com</a>
+                        <a href="pricing.html" className="border border-white/40 text-white px-8 py-3 rounded-lg font-semibold">查看标准套餐</a>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Footer = () => (
+            <footer className="bg-[#0b0c15] py-10 border-t border-gray-900 text-center text-gray-500 text-sm">
+                <p>© 2025 OpenQuant Solutions · Enterprise Grade Infrastructure</p>
+            </footer>
+        );
+
+        const App = () => (
+            <div className="min-h-screen bg-[#0b0c15] text-gray-200">
+                <Navbar />
+                <main>
+                    <IndustryGrid />
+                    <Workflow />
+                    <CaseStudies />
+                    <CTA />
+                </main>
+                <Footer />
+            </div>
+        );
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+
+

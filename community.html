@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community - OpenQuant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0c15; color: #e2e8f0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const navLinks = [
+            { href: "openquant.html", label: "首页" },
+            { href: "dashboard.html", label: "控制台" },
+            { href: "lab.html", label: "量化实验室" },
+            { href: "marketplace.html", label: "策略广场" },
+            { href: "data-center.html", label: "数据中心" },
+            { href: "academy.html", label: "学院" },
+            { href: "pricing.html", label: "价格" },
+            { href: "solutions.html", label: "解决方案" },
+            { href: "community.html", label: "社区" },
+        ];
+
+        const Navbar = () => (
+            <nav className="fixed top-0 w-full z-50 bg-[#0b0c15]/90 backdrop-blur-md border-b border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <a href="openquant.html" className="flex items-center gap-2 cursor-pointer">
+                            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/20">
+                                <span className="font-bold text-white text-lg">O</span>
+                            </div>
+                            <span className="font-bold text-xl tracking-tight text-white">OpenQuant</span>
+                        </a>
+                        <div className="hidden md:block">
+                            <div className="ml-10 flex items-center gap-1 text-sm font-medium">
+                                {navLinks.map(link => (
+                                    <a key={link.href} href={link.href} className={`whitespace-nowrap px-3 py-2 rounded-md transition-colors ${link.href === "community.html" ? "text-green-400 border-b-2 border-green-400" : "text-gray-300 hover:text-green-400"}`}>
+                                        {link.label}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="hidden md:flex items-center gap-2 text-xs text-gray-400 bg-gray-900 px-3 py-1 rounded-full border border-gray-800">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                Co-location Active
+                            </div>
+                            <button className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-lg shadow-green-900/20">
+                                登录 / 注册
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        );
+
+        const Hero = () => (
+            <section className="pt-28 pb-16 text-center bg-gradient-to-b from-[#0b0c15] to-[#111322]">
+                <div className="max-w-4xl mx-auto px-4">
+                    <span className="text-xs text-green-300 tracking-widest font-semibold">COMMUNITY</span>
+                    <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">与全球量化工程师共同构建策略</h1>
+                    <p className="text-gray-400 text-lg">
+                        这里有策略分享、因子开源、机器学习研究、实盘监控脚本、开源工具，以及每周的 Live AMA 和 Hackathon。
+                    </p>
+                </div>
+            </section>
+        );
+
+        const posts = [
+            { title: "使用 OpenQuant Co-lo 部署跨所套利", author: "QuantWhale", likes: 128, tags: ["实盘", "Arb"] },
+            { title: "Rust + PyO3 混合策略模板开源", author: "Rustacean", likes: 94, tags: ["开源", "模板"] },
+            { title: "链上数据做多因子模型分享", author: "OnChain.Dev", likes: 76, tags: ["因子", "On-chain"] },
+            { title: "如何构建 24h 风控巡检脚本", author: "RiskOps", likes: 63, tags: ["风控"] },
+        ];
+
+        const Forums = () => (
+            <section className="py-16">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="flex items-center justify-between mb-10">
+                        <h2 className="text-3xl font-bold text-white">热门讨论</h2>
+                        <button className="text-sm text-green-400 font-semibold">查看全部 →</button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {posts.map(post => (
+                            <div key={post.title} className="bg-[#161822] border border-gray-800 rounded-xl p-5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-xs text-gray-500">作者 {post.author}</span>
+                                    <span className="text-xs text-green-400 font-mono">❤ {post.likes}</span>
+                                </div>
+                                <h3 className="text-xl text-white font-semibold mb-3">{post.title}</h3>
+                                <div className="flex gap-2 flex-wrap">
+                                    {post.tags.map(tag => <span key={tag} className="text-[11px] text-gray-300 px-2 py-1 rounded-full bg-white/5 border border-white/10">{tag}</span>)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Events = () => (
+            <section className="py-16 bg-[#111322] border-y border-gray-800">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10 gap-6">
+                        <div>
+                            <h2 className="text-3xl font-bold text-white mb-2">社区活动</h2>
+                            <p className="text-gray-400">每周分享 · 黑客松 · 线下 Meetup</p>
+                        </div>
+                        <button className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg">报名活动</button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[
+                            { title: "Weekly AMA", desc: "主题：多策略资金管理", time: "周五 21:00 · 在线" },
+                            { title: "Latency Hackathon", desc: "Rust 网络栈优化实战", time: "12/12 · 新加坡" },
+                            { title: "Quant Meetup", desc: "上海线下 · 100 人规模", time: "12/20 · 张江" },
+                        ].map(item => (
+                            <div key={item.title} className="bg-[#161822] border border-gray-800 rounded-xl p-5">
+                                <p className="text-xs text-gray-500 uppercase tracking-widest">{item.time}</p>
+                                <h3 className="text-xl font-semibold text-white my-2">{item.title}</h3>
+                                <p className="text-gray-400 text-sm">{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const OpenSource = () => (
+            <section className="py-16">
+                <div className="max-w-5xl mx-auto px-4 text-center">
+                    <h2 className="text-3xl font-bold text-white mb-4">开源工具 & 贡献排行榜</h2>
+                    <p className="text-gray-400 mb-8">OpenQuant 维护 12 个核心仓库，包括 Rust 执行引擎、Python SDK、监控套件。</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                        {[
+                            { name: "oq-exec", desc: "Rust 执行引擎 + SIMD 优化" },
+                            { name: "oq-monitor", desc: "Prometheus 指标 + Grafana 模板" },
+                            { name: "oq-ai-copilot", desc: "策略语言到 Rust AST" },
+                        ].map(repo => (
+                            <div key={repo.name} className="bg-[#161822] border border-gray-800 rounded-xl p-5">
+                                <h3 className="text-lg text-white font-semibold mb-2">{repo.name}</h3>
+                                <p className="text-gray-400 text-sm">{repo.desc}</p>
+                                <button className="mt-4 text-sm text-green-400 font-semibold">GitHub →</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Footer = () => (
+            <footer className="bg-[#0b0c15] py-10 border-t border-gray-900 text-center text-gray-500 text-sm">
+                <p>© 2025 OpenQuant Community · Build Together</p>
+            </footer>
+        );
+
+        const App = () => (
+            <div className="min-h-screen bg-[#0b0c15] text-gray-200">
+                <Navbar />
+                <main>
+                    <Hero />
+                    <Forums />
+                    <Events />
+                    <OpenSource />
+                </main>
+                <Footer />
+            </div>
+        );
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - OpenQuant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0c15; color: #e2e8f0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const navLinks = [
+            { href: "openquant.html", label: "首页" },
+            { href: "dashboard.html", label: "控制台" },
+            { href: "lab.html", label: "量化实验室" },
+            { href: "marketplace.html", label: "策略广场" },
+            { href: "data-center.html", label: "数据中心" },
+            { href: "academy.html", label: "学院" },
+            { href: "pricing.html", label: "价格" },
+            { href: "solutions.html", label: "解决方案" },
+            { href: "community.html", label: "社区" },
+        ];
+
+        const Navbar = () => (
+            <nav className="fixed top-0 w-full z-50 bg-[#0b0c15]/90 backdrop-blur-md border-b border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <a href="openquant.html" className="flex items-center gap-2 cursor-pointer">
+                            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/20">
+                                <span className="font-bold text-white text-lg">O</span>
+                            </div>
+                            <span className="font-bold text-xl tracking-tight text-white">OpenQuant</span>
+                        </a>
+                        <div className="hidden md:block">
+                            <div className="ml-10 flex items-center gap-1 text-sm font-medium">
+                                {navLinks.map(link => (
+                                    <a key={link.href} href={link.href} className={`whitespace-nowrap px-3 py-2 rounded-md transition-colors ${link.href === "pricing.html" ? "text-green-400 border-b-2 border-green-400" : "text-gray-300 hover:text-green-400"}`}>
+                                        {link.label}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="hidden md:flex items-center gap-2 text-xs text-gray-400 bg-gray-900 px-3 py-1 rounded-full border border-gray-800">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                Co-location Active
+                            </div>
+                            <button className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-lg shadow-green-900/20">
+                                登录 / 注册
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        );
+
+        const plans = [
+            {
+                name: "Starter",
+                price: "¥ 0",
+                desc: "个人研究者 / 学生",
+                features: ["回测算力 8 cores", "Binance 行情延迟 300ms", "策略部署 1 条", "API 调用 50k/月"],
+                cta: "免费使用"
+            },
+            {
+                name: "Pro",
+                price: "¥ 2,999 / 月",
+                desc: "专业量化团队",
+                features: ["回测算力 64 cores + GPU", "Co-location 席位 1 个", "策略部署 10 条", "API 调用 500k/月", "AI Copilot 无限使用"],
+                highlight: true,
+                cta: "开始 14 天试用"
+            },
+            {
+                name: "Institution",
+                price: "定制",
+                desc: "机构 / 自营 / 做市",
+                features: ["专属裸金属集群", "多席位 Co-location", "OMS/EMS 接入", "专属客户成功经理", "白标方案"],
+                cta: "预约演示"
+            }
+        ];
+
+        const PricingTable = () => (
+            <section className="pt-28 pb-16">
+                <div className="max-w-6xl mx-auto px-4 text-center">
+                    <h1 className="text-4xl font-bold text-white mb-4">透明价格 · 按需扩展</h1>
+                    <p className="text-gray-400 mb-10">所有套餐均包含 24/7 监控、专线支援、策略沙盒与安全审计。</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {plans.map(plan => (
+                            <div key={plan.name} className={`rounded-2xl border ${plan.highlight ? "border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.15)]" : "border-gray-800"} bg-[#13151f] p-6 flex flex-col`}>
+                                <div className="text-left">
+                                    <p className="text-xs uppercase text-gray-500">{plan.name}</p>
+                                    <h3 className="text-3xl font-bold text-white my-2">{plan.price}</h3>
+                                    <p className="text-gray-400 text-sm mb-4">{plan.desc}</p>
+                                </div>
+                                <ul className="text-left space-y-3 text-sm text-gray-300 flex-grow">
+                                    {plan.features.map(item => <li key={item}>• {item}</li>)}
+                                </ul>
+                                <button className={`mt-6 w-full py-3 rounded-lg font-semibold ${plan.highlight ? "bg-green-600 hover:bg-green-500 text-white" : "bg-gray-800 hover:bg-gray-700 text-white"}`}>{plan.cta}</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Comparison = () => (
+            <section className="py-16 bg-[#111322] border-y border-gray-800">
+                <div className="max-w-6xl mx-auto px-4">
+                    <h2 className="text-3xl font-bold text-white mb-6 text-center">功能矩阵</h2>
+                    <div className="overflow-auto no-scrollbar">
+                        <table className="min-w-full text-sm text-left">
+                            <thead className="text-gray-400 uppercase tracking-widest text-xs">
+                                <tr>
+                                    <th className="py-3">功能</th>
+                                    {plans.map(p => <th key={p.name} className="py-3 text-center">{p.name}</th>)}
+                                </tr>
+                            </thead>
+                            <tbody className="text-gray-300">
+                                {[
+                                    { feature: "回测算力", values: ["8 cores", "64 cores + GPU", "定制裸金属"] },
+                                    { feature: "Co-location 席位", values: ["-", "1", "N (冗余)"] },
+                                    { feature: "数据中心", values: ["基础行情", "全量行情 + 链上", "全量 + 私有源"] },
+                                    { feature: "策略部署", values: ["1 条", "10 条", "无限制"] },
+                                    { feature: "安全隔离", values: ["共享", "VPC 独占", "专有物理机"] },
+                                ].map(row => (
+                                    <tr key={row.feature} className="border-t border-gray-800">
+                                        <td className="py-4">{row.feature}</td>
+                                        {row.values.map((val, idx) => <td key={idx} className="py-4 text-center text-white">{val}</td>)}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const FAQ = () => (
+            <section className="py-16">
+                <div className="max-w-4xl mx-auto px-4">
+                    <h2 className="text-3xl font-bold text-white mb-10 text-center">常见问题</h2>
+                    <div className="space-y-6">
+                        {[
+                            { q: "是否支持按需扩容算力？", a: "支持，Pro 及以上套餐可自助扩展 GPU / FPGA 集群，费用按小时计费。" },
+                            { q: "如何计费 API 调用和数据存储？", a: "套餐内包含基础额度，超出部分按阶梯单价结算，账单可导出 CSV。" },
+                            { q: "是否提供合规审计与灾备？", a: "机构套餐提供专属合规顾问与双活灾备演练报告，满足 SOC2 / ISO27001 需求。" },
+                        ].map(item => (
+                            <div key={item.q} className="bg-[#161822] border border-gray-800 rounded-xl p-5">
+                                <h3 className="text-lg text-white font-semibold mb-2">{item.q}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">{item.a}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Footer = () => (
+            <footer className="bg-[#0b0c15] py-10 border-t border-gray-900 text-center text-gray-500 text-sm">
+                <p>© 2025 OpenQuant · Pricing & Billing</p>
+            </footer>
+        );
+
+        const App = () => (
+            <div className="min-h-screen bg-[#0b0c15] text-gray-200">
+                <Navbar />
+                <main>
+                    <PricingTable />
+                    <Comparison />
+                    <FAQ />
+                </main>
+                <Footer />
+            </div>
+        );
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+
+

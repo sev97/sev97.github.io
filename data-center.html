@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Center - OpenQuant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0c15; color: #e2e8f0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+
+        const navLinks = [
+            { href: "openquant.html", label: "首页" },
+            { href: "dashboard.html", label: "控制台" },
+            { href: "lab.html", label: "量化实验室" },
+            { href: "marketplace.html", label: "策略广场" },
+            { href: "data-center.html", label: "数据中心" },
+            { href: "academy.html", label: "学院" },
+            { href: "pricing.html", label: "价格" },
+            { href: "solutions.html", label: "解决方案" },
+            { href: "community.html", label: "社区" },
+        ];
+
+        const Navbar = () => (
+            <nav className="fixed top-0 w-full z-50 bg-[#0b0c15]/90 backdrop-blur-md border-b border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <a href="openquant.html" className="flex items-center gap-2 cursor-pointer">
+                            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/20">
+                                <span className="font-bold text-white text-lg">O</span>
+                            </div>
+                            <span className="font-bold text-xl tracking-tight text-white">OpenQuant</span>
+                        </a>
+                        <div className="hidden md:block">
+                            <div className="ml-10 flex items-center gap-1 text-sm font-medium">
+                                {navLinks.map(link => (
+                                    <a key={link.href} href={link.href} className={`whitespace-nowrap px-3 py-2 rounded-md transition-colors ${link.href === "data-center.html" ? "text-green-400 border-b-2 border-green-400" : "text-gray-300 hover:text-green-400"}`}>
+                                        {link.label}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="hidden md:flex items-center gap-2 text-xs text-gray-400 bg-gray-900 px-3 py-1 rounded-full border border-gray-800">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                Co-location Active
+                            </div>
+                            <button className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-lg shadow-green-900/20">
+                                登录 / 注册
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        );
+
+        const DataHero = () => (
+            <section className="pt-28 pb-16 bg-gradient-to-b from-[#0b0c15] to-[#111322]">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <span className="text-green-400 text-sm font-mono tracking-wider uppercase">DATA CENTER</span>
+                    <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">机构级行情 & 另类数据，一站式接入</h1>
+                    <p className="text-gray-400 text-lg max-w-3xl mx-auto">
+                        深度覆盖 20+ 交易所实时/历史行情、链上指标、资金流向、社交情绪与宏观因子，统一标准化字段，自带质量评估与缺失值修复。
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-4 mt-8">
+                        <a href="pricing.html" className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-lg font-semibold shadow-lg shadow-green-500/30 transition-all">订阅数据包</a>
+                        <a href="#api" className="bg-[#161822] hover:bg-gray-800 border border-gray-700 text-white px-8 py-3 rounded-lg font-medium transition-all">查看 API 规格</a>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const datasetList = [
+            { name: "极速 L2 行情", type: "实时 · 毫秒级", exchanges: "Binance / OKX / Bybit", update: "1s", latency: "< 10ms", tags: ["Websocket", "Tick-Level"], color: "from-green-500/20 to-green-500/5" },
+            { name: "链上资金流", type: "链上指标", exchanges: "BTC / ETH / Solana", update: "5m", latency: "< 30s", tags: ["On-chain", "Glassnode"], color: "from-purple-500/20 to-purple-500/5" },
+            { name: "另类舆情", type: "社交情绪", exchanges: "Twitter / Reddit / Discord", update: "1m", latency: "< 60s", tags: ["Sentiment", "AI NLP"], color: "from-blue-500/20 to-blue-500/5" },
+            { name: "宏观利率", type: "宏观因子", exchanges: "FRED / Wind", update: "1d", latency: "< 1h", tags: ["Macro", "Risk Model"], color: "from-amber-500/20 to-amber-500/5" },
+        ];
+
+        const DatasetGrid = () => (
+            <section className="py-16">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between mb-10">
+                        <div>
+                            <h2 className="text-3xl font-bold text-white mb-2">精选数据包</h2>
+                            <p className="text-gray-500">所有数据均经过延迟 & 缺失监控，可回溯 5 年历史。</p>
+                        </div>
+                        <select className="bg-[#161822] border border-gray-800 text-sm text-gray-300 rounded-lg px-3 py-2">
+                            <option>全部类型</option>
+                            <option>实时行情</option>
+                            <option>链上数据</option>
+                            <option>另类数据</option>
+                        </select>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {datasetList.map((set, idx) => (
+                            <div key={idx} className={`bg-gradient-to-br ${set.color} border border-gray-800 rounded-2xl p-6`}>
+                                <div className="flex items-center justify-between mb-3">
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase">{set.type}</p>
+                                        <h3 className="text-xl font-semibold text-white">{set.name}</h3>
+                                    </div>
+                                    <span className="text-sm text-gray-400 font-mono">{set.update} 更新</span>
+                                </div>
+                                <p className="text-gray-400 text-sm mb-4">覆盖：{set.exchanges}</p>
+                                <div className="flex items-center justify-between text-sm text-gray-300 mb-4">
+                                    <span>延迟：{set.latency}</span>
+                                    <span>数据完整度：99.95%</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {set.tags.map(tag => (
+                                        <span key={tag} className="text-xs text-gray-300 bg-black/20 px-2 py-1 rounded-full border border-white/5">{tag}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const ApiShowcase = () => {
+            const endpoints = [
+                { name: "GET /v2/tick", desc: "毫秒级 Level2 行情，支持聚合/快照模式", limit: "200 req/s", sample: "curl https://api.openquant.com/v2/tick?symbol=BTC-USDT&depth=20" },
+                { name: "GET /v1/onchain/flow", desc: "链上资金流向与大额地址监控", limit: "60 req/s", sample: "curl https://api.openquant.com/v1/onchain/flow?chain=ETH" },
+                { name: "GET /v1/sentiment", desc: "社交媒体情绪，提供多语种 NLP 指标", limit: "30 req/s", sample: "curl https://api.openquant.com/v1/sentiment?topic=BTC" },
+            ];
+            return (
+                <section id="api" className="py-16 bg-[#111322] border-t border-b border-gray-800">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10 gap-6">
+                            <div>
+                                <h2 className="text-3xl font-bold text-white mb-2">统一 API · 开箱即用</h2>
+                                <p className="text-gray-400 max-w-2xl">REST + Websocket 双栈、API Key 权限控制、带宽压缩、历史回看、数据沙盒。提供 Python / Rust / Go SDK。</p>
+                            </div>
+                            <a href="#" className="text-green-400 text-sm font-semibold hover:text-green-200 border border-green-500/40 px-4 py-2 rounded-lg">下载 SDK</a>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {endpoints.map((api, idx) => (
+                                <div key={idx} className="bg-[#161822] border border-gray-800 rounded-xl p-5 flex flex-col">
+                                    <p className="text-xs text-green-400 font-mono mb-2">{api.name}</p>
+                                    <h3 className="text-white font-semibold mb-2">{api.desc}</h3>
+                                    <p className="text-gray-500 text-xs mb-3">限额：{api.limit}</p>
+                                    <pre className="bg-black/40 text-[11px] text-gray-300 font-mono p-3 rounded-lg flex-grow">{api.sample}</pre>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const Compliance = () => (
+            <section className="py-16">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                    <div>
+                        <span className="text-xs text-blue-400 font-semibold">COMPLIANCE & QUALITY</span>
+                        <h2 className="text-3xl font-bold text-white my-4">数据质量与合规托管</h2>
+                        <ul className="space-y-4 text-gray-400">
+                            <li><span className="text-green-400 font-semibold">99.99%</span> 自动化缺失监控 + 延迟追踪</li>
+                            <li>多云多活部署，S3 + OSS 双备份，历史可追溯 5 年</li>
+                            <li>符合 MiCA / SOC2 / ISO27001，支持定制白名单</li>
+                        </ul>
+                    </div>
+                    <div className="bg-[#161822] border border-gray-800 rounded-2xl p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <p className="text-gray-400 text-sm">数据延迟实时监控</p>
+                            <span className="text-green-400 font-mono text-sm">avg 7.2ms</span>
+                        </div>
+                        <div className="h-32 bg-gradient-to-b from-green-500/30 to-transparent rounded-xl"></div>
+                        <button className="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl font-semibold transition-colors">预约数据顾问</button>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Footer = () => (
+            <footer className="bg-[#0b0c15] py-10 border-t border-gray-900 text-center text-gray-500 text-sm">
+                <p>© 2025 OpenQuant Data Center · Data at the Speed of Light</p>
+            </footer>
+        );
+
+        const App = () => (
+            <div className="min-h-screen bg-[#0b0c15] text-gray-200">
+                <Navbar />
+                <main>
+                    <DataHero />
+                    <DatasetGrid />
+                    <ApiShowcase />
+                    <Compliance />
+                </main>
+                <Footer />
+            </div>
+        );
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+
+

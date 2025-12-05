@@ -77,70 +77,279 @@
         );
 
         const Lab = () => {
+            const [showStartModal, setShowStartModal] = useState(true);
+            const [showAIPanel, setShowAIPanel] = useState(false);
+            const [showTemplates, setShowTemplates] = useState(false);
+            const [beginnerMode, setBeginnerMode] = useState(false);
+            const [aiInput, setAiInput] = useState('');
+            const [aiMessages, setAiMessages] = useState([
+                {role: 'assistant', content: '👋 你好！我是 AI Copilot，可以帮你生成策略代码。试试描述你的策略想法，比如："当BTC跌破20日均线且RSI小于30时买入"'}
+            ]);
+            
             const [code, setCode] = useState(`import openquant as oq\n\n# 策略入口：Rust 引擎回调\n@oq.rust_accelerate\ndef on_tick(context, tick):\n    # 简单的双均线策略\n    ma_fast = oq.sma(tick.symbol, 5)\n    ma_slow = oq.sma(tick.symbol, 20)\n    \n    if ma_fast > ma_slow and context.pos == 0:\n        # 极速下单（微秒级）\n        oq.order_target_percent(tick.symbol, 1.0)\n        context.log(f"Long Signal: {tick.price}")\n        \n    elif ma_fast < ma_slow and context.pos > 0:\n        oq.order_target_percent(tick.symbol, 0)\n        context.log(f"Close Signal: {tick.price}")`);
+
+            const templates = [
+                {
+                    name: "双均线策略",
+                    desc: "经典趋势跟踪策略，适合新手",
+                    difficulty: "简单",
+                    code: `import openquant as oq\n\n@oq.rust_accelerate\ndef on_tick(context, tick):\n    ma_fast = oq.sma(tick.symbol, 5)\n    ma_slow = oq.sma(tick.symbol, 20)\n    \n    if ma_fast > ma_slow and context.pos == 0:\n        oq.order_target_percent(tick.symbol, 1.0)\n    elif ma_fast < ma_slow and context.pos > 0:\n        oq.order_target_percent(tick.symbol, 0)`
+                },
+                {
+                    name: "网格交易",
+                    desc: "震荡市场利器，自动高抛低吸",
+                    difficulty: "中等",
+                    code: `import openquant as oq\n\n@oq.rust_accelerate\ndef on_tick(context, tick):\n    # 网格参数\n    grid_size = 0.01  # 1%网格\n    if tick.price < context.last_buy * (1 - grid_size):\n        oq.buy(tick.symbol, 0.1)\n        context.last_buy = tick.price\n    elif tick.price > context.last_sell * (1 + grid_size):\n        oq.sell(tick.symbol, 0.1)\n        context.last_sell = tick.price`
+                },
+                {
+                    name: "RSI 超买超卖",
+                    desc: "基于RSI指标的反转策略",
+                    difficulty: "简单",
+                    code: `import openquant as oq\n\n@oq.rust_accelerate\ndef on_tick(context, tick):\n    rsi = oq.rsi(tick.symbol, 14)\n    \n    if rsi < 30 and context.pos == 0:\n        # RSI超卖，买入\n        oq.buy_twap(tick.symbol, 1.0, duration=60)\n    elif rsi > 70 and context.pos > 0:\n        # RSI超买，卖出\n        oq.sell_twap(tick.symbol, context.pos, duration=60)`
+                },
+                {
+                    name: "MACD 金叉死叉",
+                    desc: "经典技术指标策略",
+                    difficulty: "中等",
+                    code: `import openquant as oq\n\n@oq.rust_accelerate\ndef on_tick(context, tick):\n    macd, signal = oq.macd(tick.symbol)\n    \n    if macd > signal and context.pos == 0:\n        # 金叉买入\n        oq.order_target_percent(tick.symbol, 1.0)\n    elif macd < signal and context.pos > 0:\n        # 死叉卖出\n        oq.order_target_percent(tick.symbol, 0)`
+                }
+            ];
+
+            const handleSendAI = () => {
+                if (!aiInput.trim()) return;
+                setAiMessages([...aiMessages, 
+                    {role: 'user', content: aiInput},
+                    {role: 'assistant', content: '正在为你生成策略代码...（演示版本，实际会调用AI生成）'}
+                ]);
+                setAiInput('');
+            };
+
+            const loadTemplate = (template) => {
+                setCode(template.code);
+                setShowTemplates(false);
+            };
             
             return (
-                <div className="pt-16 h-screen flex flex-col bg-[#0b0c15] animate-fade-in overflow-hidden">
-                    {/* Toolbar */}
-                    <div className="h-14 border-b border-gray-800 bg-[#13151f] px-4 flex items-center justify-between shrink-0">
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2 text-white font-semibold">
-                                <Icon name="Code" size={18} className="text-blue-400" />
-                                <span>Quant Lab</span>
-                            </div>
-                            <div className="h-6 w-px bg-gray-700"></div>
-                            <div className="flex items-center gap-2 text-sm text-gray-400">
-                                <span>strategy_v1.py</span>
-                                <span className="text-xs bg-gray-700 px-1.5 rounded">Unsaved</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm transition-colors border border-gray-700">
-                                <Icon name="Bot" size={14} /> AI 优化
-                            </button>
-                            <button className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-4 py-1.5 rounded text-sm font-medium transition-colors shadow-lg shadow-green-900/20">
-                                <Icon name="Play" size={14} /> 运行回测
-                            </button>
-                        </div>
-                    </div>
+                <div>
+                    {/* 启动模态框 */}
+                    {showStartModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                            <div className="bg-[#13151f] border border-gray-800 rounded-2xl p-8 max-w-4xl w-full mx-4 relative">
+                                <button onClick={() => setShowStartModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white">
+                                    <Icon name="X" size={20} />
+                                </button>
+                                <h2 className="text-3xl font-bold text-white mb-4 text-center">欢迎来到量化实验室</h2>
+                                <p className="text-gray-400 text-center mb-8">选择你的开发方式开始</p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div onClick={() => {setShowStartModal(false); setShowAIPanel(true);}} 
+                                         className="bg-[#0b0c15] border border-gray-800 hover:border-blue-500 rounded-xl p-6 cursor-pointer transition-all group">
+                                        <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <Icon name="Sparkles" size={24} className="text-blue-400" />
+                                        </div>
+                                        <h3 className="text-white font-bold mb-2">🤖 AI 生成</h3>
+                                        <p className="text-gray-500 text-sm">用自然语言描述策略，AI帮你写代码</p>
+                                        <div className="mt-4 text-xs text-blue-400">推荐新手 →</div>
+                                    </div>
 
-                    <div className="flex-grow flex overflow-hidden">
-                        {/* Sidebar */}
-                        <div className="w-64 bg-[#0b0c15] border-r border-gray-800 hidden md:flex flex-col">
-                            <div className="p-4 border-b border-gray-800 text-gray-400 text-xs font-bold uppercase tracking-wider">File Explorer</div>
-                            <div className="p-2 space-y-1">
-                                <div className="flex items-center gap-2 text-green-400 bg-green-500/10 px-3 py-2 rounded cursor-pointer"><span className="text-xs">PY</span> strategy_v1.py</div>
-                                <div className="flex items-center gap-2 text-gray-400 hover:bg-gray-800/50 px-3 py-2 rounded cursor-pointer transition-colors"><span className="text-xs">JSON</span> config.json</div>
-                                <div className="flex items-center gap-2 text-gray-400 hover:bg-gray-800/50 px-3 py-2 rounded cursor-pointer transition-colors"><span className="text-xs">LOG</span> backtest.log</div>
+                                    <div onClick={() => {setShowStartModal(false); setShowTemplates(true);}} 
+                                         className="bg-[#0b0c15] border border-gray-800 hover:border-green-500 rounded-xl p-6 cursor-pointer transition-all group">
+                                        <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <Icon name="FileText" size={24} className="text-green-400" />
+                                        </div>
+                                        <h3 className="text-white font-bold mb-2">📄 从模板开始</h3>
+                                        <p className="text-gray-500 text-sm">选择经典策略模板，快速上手</p>
+                                        <div className="mt-4 text-xs text-green-400">最快速 →</div>
+                                    </div>
+
+                                    <div onClick={() => {setShowStartModal(false);}} 
+                                         className="bg-[#0b0c15] border border-gray-800 hover:border-purple-500 rounded-xl p-6 cursor-pointer transition-all group">
+                                        <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <Icon name="Code" size={24} className="text-purple-400" />
+                                        </div>
+                                        <h3 className="text-white font-bold mb-2">💻 空白项目</h3>
+                                        <p className="text-gray-500 text-sm">从头开始编写你的策略</p>
+                                        <div className="mt-4 text-xs text-purple-400">完全自由 →</div>
+                                    </div>
+
+                                    <div onClick={() => alert('TradingView 导入功能即将上线')} 
+                                         className="bg-[#0b0c15] border border-gray-800 hover:border-orange-500 rounded-xl p-6 cursor-pointer transition-all group">
+                                        <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <Icon name="Download" size={24} className="text-orange-400" />
+                                        </div>
+                                        <h3 className="text-white font-bold mb-2">📥 导入 TradingView</h3>
+                                        <p className="text-gray-500 text-sm">导入Pine脚本自动转换</p>
+                                        <div className="mt-4 text-xs text-gray-500">即将上线</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 模板选择模态框 */}
+                    {showTemplates && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                            <div className="bg-[#13151f] border border-gray-800 rounded-2xl p-8 max-w-5xl w-full mx-4 relative max-h-[80vh] overflow-y-auto">
+                                <button onClick={() => setShowTemplates(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white">
+                                    <Icon name="X" size={20} />
+                                </button>
+                                <h2 className="text-2xl font-bold text-white mb-6">选择策略模板</h2>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {templates.map((template, i) => (
+                                        <div key={i} onClick={() => loadTemplate(template)}
+                                             className="bg-[#0b0c15] border border-gray-800 hover:border-green-500 rounded-xl p-6 cursor-pointer transition-all group">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div>
+                                                    <h3 className="text-white font-bold text-lg group-hover:text-green-400 transition-colors">{template.name}</h3>
+                                                    <p className="text-gray-500 text-sm mt-1">{template.desc}</p>
+                                                </div>
+                                                <span className={`text-xs px-2 py-1 rounded ${
+                                                    template.difficulty === '简单' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                                                }`}>{template.difficulty}</span>
+                                            </div>
+                                            <div className="text-xs text-gray-600 font-mono bg-[#0d0f1a] p-3 rounded overflow-hidden">
+                                                {template.code.split('\n').slice(0, 3).join('\n')}...
+                                            </div>
+                                            <div className="mt-3 text-sm text-green-400">点击使用 →</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="pt-16 h-screen flex flex-col bg-[#0b0c15] animate-fade-in overflow-hidden">
+                        {/* Toolbar */}
+                        <div className="h-14 border-b border-gray-800 bg-[#13151f] px-4 flex items-center justify-between shrink-0">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 text-white font-semibold">
+                                    <Icon name="Code" size={18} className="text-blue-400" />
+                                    <span>Quant Lab</span>
+                                </div>
+                                <div className="h-6 w-px bg-gray-700"></div>
+                                <div className="flex items-center gap-2 text-sm text-gray-400">
+                                    <span>strategy_v1.py</span>
+                                    <span className="text-xs bg-gray-700 px-1.5 rounded">Unsaved</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                                    <input type="checkbox" checked={beginnerMode} onChange={(e) => setBeginnerMode(e.target.checked)} className="rounded" />
+                                    <Icon name="Lightbulb" size={14} />
+                                    <span>新手模式</span>
+                                </label>
+                                <button onClick={() => setShowTemplates(true)} className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm transition-colors border border-gray-700">
+                                    <Icon name="Folder" size={14} /> 模板库
+                                </button>
+                                <button onClick={() => setShowAIPanel(!showAIPanel)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-sm transition-colors">
+                                    <Icon name="Sparkles" size={14} /> AI 助手
+                                </button>
+                                <button className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-4 py-1.5 rounded text-sm font-medium transition-colors shadow-lg shadow-green-900/20">
+                                    <Icon name="Play" size={14} /> 运行回测
+                                </button>
                             </div>
                         </div>
 
-                        {/* Editor */}
-                        <div className="flex-grow bg-[#0b0c15] flex flex-col">
-                            <div className="flex-grow relative font-mono text-sm flex">
-                                <div className="w-12 bg-[#0b0c15] border-r border-gray-800 text-gray-600 text-right pr-3 pt-4 select-none leading-6">
-                                    {code.split('\n').map((_, i) => <div key={i}>{i+1}</div>)}
+                        <div className="flex-grow flex overflow-hidden">
+                            {/* AI Copilot Panel */}
+                            {showAIPanel && (
+                                <div className="w-80 bg-[#0b0c15] border-r border-gray-800 flex flex-col">
+                                    <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="Sparkles" size={16} className="text-blue-400" />
+                                            <span className="text-white font-semibold">AI Copilot</span>
+                                        </div>
+                                        <button onClick={() => setShowAIPanel(false)} className="text-gray-500 hover:text-white">
+                                            <Icon name="X" size={16} />
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="flex-grow overflow-y-auto p-4 space-y-4">
+                                        {aiMessages.map((msg, i) => (
+                                            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                <div className={`max-w-[80%] rounded-lg p-3 text-sm ${
+                                                    msg.role === 'user' 
+                                                        ? 'bg-blue-600 text-white' 
+                                                        : 'bg-[#161822] border border-gray-800 text-gray-300'
+                                                }`}>
+                                                    {msg.content}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    
+                                    <div className="p-4 border-t border-gray-800">
+                                        <div className="bg-[#161822] border border-gray-800 rounded-lg p-2 mb-2">
+                                            <div className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                                                <Icon name="Info" size={12} />
+                                                <span>示例提示：</span>
+                                            </div>
+                                            <div className="space-y-1 text-xs">
+                                                <div onClick={() => setAiInput("当BTC跌破20日均线且RSI小于30时买入")} className="text-blue-400 hover:text-blue-300 cursor-pointer">• 当BTC跌破20日均线且RSI小于30时买入</div>
+                                                <div onClick={() => setAiInput("创建一个网格交易策略，网格间距1%")} className="text-blue-400 hover:text-blue-300 cursor-pointer">• 创建一个网格交易策略</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="text" 
+                                                value={aiInput}
+                                                onChange={(e) => setAiInput(e.target.value)}
+                                                onKeyPress={(e) => e.key === 'Enter' && handleSendAI()}
+                                                placeholder="描述你的策略想法..."
+                                                className="flex-grow bg-[#161822] border border-gray-800 text-white text-sm rounded px-3 py-2 outline-none focus:border-blue-500"
+                                            />
+                                            <button onClick={handleSendAI} className="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded">
+                                                <Icon name="Send" size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <textarea 
-                                    value={code} 
-                                    onChange={(e) => setCode(e.target.value)}
-                                    className="flex-grow bg-[#0b0c15] text-gray-300 p-4 outline-none resize-none leading-6"
-                                    spellCheck="false"
-                                ></textarea>
+                            )}
+
+                            {/* Sidebar */}
+                            <div className="w-64 bg-[#0b0c15] border-r border-gray-800 hidden md:flex flex-col">
+                                <div className="p-4 border-b border-gray-800 text-gray-400 text-xs font-bold uppercase tracking-wider">File Explorer</div>
+                                <div className="p-2 space-y-1">
+                                    <div className="flex items-center gap-2 text-green-400 bg-green-500/10 px-3 py-2 rounded cursor-pointer"><span className="text-xs">PY</span> strategy_v1.py</div>
+                                    <div className="flex items-center gap-2 text-gray-400 hover:bg-gray-800/50 px-3 py-2 rounded cursor-pointer transition-colors"><span className="text-xs">JSON</span> config.json</div>
+                                    <div className="flex items-center gap-2 text-gray-400 hover:bg-gray-800/50 px-3 py-2 rounded cursor-pointer transition-colors"><span className="text-xs">LOG</span> backtest.log</div>
+                                </div>
                             </div>
-                            
-                            {/* Terminal / Logs */}
-                            <div className="h-48 border-t border-gray-800 bg-[#13151f] p-4 font-mono text-xs overflow-y-auto">
-                                <div className="flex items-center gap-2 text-gray-500 mb-2 pb-2 border-b border-gray-800">
-                                    <span className="text-white border-b-2 border-green-400 pb-2 -mb-2.5">Output</span>
-                                    <span className="hover:text-white cursor-pointer">Logs</span>
-                                    <span className="hover:text-white cursor-pointer">Errors</span>
+
+                            {/* Editor */}
+                            <div className="flex-grow bg-[#0b0c15] flex flex-col">
+                                {beginnerMode && (
+                                    <div className="bg-blue-500/10 border-b border-blue-500/30 px-4 py-2 flex items-center gap-2 text-sm text-blue-400">
+                                        <Icon name="BookOpen" size={14} />
+                                        <span>新手模式已开启 - 代码将显示详细注释和说明</span>
+                                    </div>
+                                )}
+                                <div className="flex-grow relative font-mono text-sm flex">
+                                    <div className="w-12 bg-[#0b0c15] border-r border-gray-800 text-gray-600 text-right pr-3 pt-4 select-none leading-6">
+                                        {code.split('\n').map((_, i) => <div key={i}>{i+1}</div>)}
+                                    </div>
+                                    <textarea 
+                                        value={code} 
+                                        onChange={(e) => setCode(e.target.value)}
+                                        className="flex-grow bg-[#0b0c15] text-gray-300 p-4 outline-none resize-none leading-6"
+                                        spellCheck="false"
+                                    ></textarea>
                                 </div>
-                                <div className="space-y-1">
-                                    <div className="text-green-500/80">[System] Rust Engine Initialized (v2.4.0)</div>
-                                    <div className="text-gray-400">[Info] Loaded historic data: BTC-USDT (2024-01-01 ~ 2024-06-01)</div>
-                                    <div className="text-blue-400">[Backtest] Running... Speed: 150,000 ticks/sec</div>
-                                    <div className="text-gray-400">...</div>
+                                
+                                {/* Terminal / Logs */}
+                                <div className="h-48 border-t border-gray-800 bg-[#13151f] p-4 font-mono text-xs overflow-y-auto">
+                                    <div className="flex items-center gap-2 text-gray-500 mb-2 pb-2 border-b border-gray-800">
+                                        <span className="text-white border-b-2 border-green-400 pb-2 -mb-2.5">Output</span>
+                                        <span className="hover:text-white cursor-pointer">Logs</span>
+                                        <span className="hover:text-white cursor-pointer">Errors</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="text-green-500/80">[System] Rust Engine Initialized (v2.4.0)</div>
+                                        <div className="text-gray-400">[Info] Loaded historic data: BTC-USDT (2024-01-01 ~ 2024-06-01)</div>
+                                        <div className="text-blue-400">[Backtest] Running... Speed: 150,000 ticks/sec</div>
+                                        <div className="text-gray-400">...</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

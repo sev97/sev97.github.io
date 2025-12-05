@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenQuant - 极速加密货币量化终端</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0c15; color: #e2e8f0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .neon-text-green { text-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
+        .neon-border-green { box-shadow: 0 0 15px rgba(74, 222, 128, 0.2); }
+        @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .animate-pulse-slow { animation: pulse-slow 3s infinite; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Icons ---
+        const Icons = {
+            Zap: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+            Server: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>,
+            WifiOff: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>,
+            CheckCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            User: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+            ArrowUpRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>,
+            ChevronDown: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
+            Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+            Bot: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>,
+            Target: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+            DollarSign: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+            Code: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
+            BarChart: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>,
+            Settings: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m8.66-13.66l-4.24 4.24m-4.24 4.24L3.34 22.66M23 12h-6m-6 0H1m20.66 8.66l-4.24-4.24m-4.24-4.24L3.34 1.34"/></svg>,
+            Rocket: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>,
+            Package: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
+            Globe: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+            Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+            Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+        };
+        const Icon = ({ name, size = 16, className = "" }) => {
+            const IconComp = Icons[name];
+            return IconComp ? <span className={`inline-block ${className}`} style={{width: size, height: size}}><IconComp /></span> : null;
+        };
+
+        // --- Components ---
+        const Sparkline = ({ data, color = "#4ade80", height = 60 }) => {
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const range = max - min || 1;
+            const points = data.map((val, i) => {
+                const x = (i / (data.length - 1)) * 100;
+                const y = 100 - ((val - min) / range) * 80 - 10; 
+                return `${x},${y}`;
+            }).join(" ");
+            return (
+                <div className="w-full overflow-hidden" style={{ height: `${height}px` }}>
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+                        <defs>
+                            <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+                                <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+                                <stop offset="100%" stopColor={color} stopOpacity="0" />
+                            </linearGradient>
+                        </defs>
+                        <polygon points={`0,100 ${points} 100,100`} fill="url(#gradient)" />
+                        <polyline points={points} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                    </svg>
+                </div>
+            );
+        };
+
+        const Navbar = () => (
+            <nav className="fixed top-0 w-full z-50 bg-[#0b0c15]/90 backdrop-blur-md border-b border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <a href="index.html" className="flex items-center gap-2 cursor-pointer">
+                            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/20">
+                                <span className="font-bold text-white text-lg">O</span>
+                            </div>
+                            <span className="font-bold text-xl tracking-tight text-white">OpenQuant</span>
+                        </a>
+                        <div className="hidden md:block">
+                            <div className="ml-10 flex items-center gap-1 text-sm font-medium">
+                                <a href="index.html" className="whitespace-nowrap text-green-400 px-3 py-2 rounded-md transition-colors">首页</a>
+                                <a href="dashboard.html" className="whitespace-nowrap text-gray-300 hover:text-green-400 px-3 py-2 rounded-md transition-colors">控制台</a>
+                                <a href="lab.html" className="whitespace-nowrap text-gray-300 hover:text-green-400 px-3 py-2 rounded-md transition-colors">量化实验室</a>
+                                <a href="marketplace.html" className="whitespace-nowrap text-gray-300 hover:text-green-400 px-3 py-2 rounded-md transition-colors">策略广场</a>
+                                <a href="data-center.html" className="whitespace-nowrap text-gray-300 hover:text-green-400 px-3 py-2 rounded-md transition-colors">数据中心</a>
+                                <a href="academy.html" className="whitespace-nowrap text-gray-300 hover:text-green-400 px-3 py-2 rounded-md transition-colors">学院</a>
+                                <a href="pricing.html" className="whitespace-nowrap text-gray-300 hover:text-green-400 px-3 py-2 rounded-md transition-colors">价格</a>
+                                <a href="solutions.html" className="whitespace-nowrap text-gray-300 hover:text-green-400 px-3 py-2 rounded-md transition-colors">解决方案</a>
+                                <a href="community.html" className="whitespace-nowrap text-gray-300 hover:text-green-400 px-3 py-2 rounded-md transition-colors">社区</a>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="hidden md:flex items-center gap-2 text-xs text-gray-400 bg-gray-900 px-3 py-1 rounded-full border border-gray-800">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                Co-location Active
+                            </div>
+                            <button className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-lg shadow-green-900/20">
+                                登录 / 注册
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        );
+
+        const Hero = () => {
+            const [cloudPing, setCloudPing] = useState(1.2);
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setCloudPing((Math.random() * (2.0 - 0.8) + 0.8).toFixed(2));
+                }, 1000);
+                return () => clearInterval(interval);
+            }, []);
+            return (
+                <div className="relative pt-32 pb-16 sm:pt-40 sm:pb-20 overflow-hidden">
+                    <div className="absolute top-0 left-1/2 w-full -translate-x-1/2 h-full z-0 pointer-events-none">
+                         <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[100px]"></div>
+                         <div className="absolute top-[20%] right-[20%] w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px]"></div>
+                    </div>
+                    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-sm font-medium mb-8">
+                            <Icon name="Zap" size={14} />
+                            <span>0 编程门槛 · AI 驱动 · 一键部署</span>
+                        </div>
+                        <h1 className="text-5xl sm:text-6xl font-extrabold text-white tracking-tight mb-6">
+                            人人都能做量化<br/>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">0门槛开启财富增长</span>
+                        </h1>
+                        <div className="mt-6 max-w-3xl mx-auto space-y-3 text-lg text-gray-300 mb-10">
+                            <div className="flex items-center justify-center gap-3">
+                                <Icon name="Check" size={20} className="text-green-400 flex-shrink-0" />
+                                <span>AI 自动生成策略代码 - 不需要编程基础</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-3">
+                                <Icon name="Check" size={20} className="text-green-400 flex-shrink-0" />
+                                <span>内置 10+ 交易算法 - 不用自己写算法</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-3">
+                                <Icon name="Check" size={20} className="text-green-400 flex-shrink-0" />
+                                <span>一键部署到云端 - 不需要服务器运维</span>
+                            </div>
+                        </div>
+                        <div className="flex justify-center gap-4 mb-12">
+                            <a href="dashboard.html" className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-green-500/30 flex items-center gap-2">
+                                立即免费开始 <Icon name="ArrowUpRight" size={18} />
+                            </a>
+                            <a href="#demo" className="bg-[#161822] hover:bg-gray-800 border border-gray-700 text-white px-8 py-3 rounded-lg font-medium transition-all">
+                                观看演示视频
+                            </a>
+                        </div>
+                        <div className="max-w-2xl mx-auto">
+                            <div className="bg-[#13151f] border border-green-500/30 rounded-xl p-6 flex items-center justify-between relative overflow-hidden neon-border-green">
+                                <div className="absolute inset-0 bg-green-500/5"></div>
+                                <div className="flex flex-col text-left relative z-10">
+                                    <span className="text-green-500/80 text-sm font-mono mb-1 flex items-center gap-2">
+                                        <Icon name="Server" size={12} /> OPENQUANT CO-LOCATION
+                                    </span>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-4xl font-bold text-green-400 font-mono neon-text-green">{cloudPing}</span>
+                                        <span className="text-gray-400 text-sm">ms 延迟</span>
+                                    </div>
+                                    <span className="text-xs text-green-400/60 mt-2 flex items-center gap-1">
+                                        <Icon name="CheckCircle" size={12} /> 比本地快 100 倍
+                                    </span>
+                                </div>
+                                <div className="w-16 h-16 rounded-full border-4 border-green-500/30 flex items-center justify-center relative">
+                                    <div className="absolute inset-0 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <Icon name="Zap" className="text-green-400" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const UserScenarios = () => (
+            <div className="py-20 bg-[#0b0c15]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl font-bold text-white mb-4">无论你是谁，都能轻松上手</h2>
+                        <p className="text-gray-400 text-lg">选择最适合你的方式开始量化交易</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {/* 场景1: 我有想法但不会代码 */}
+                        <div className="bg-gradient-to-br from-blue-500/10 to-transparent border border-gray-800 rounded-2xl p-8 hover:border-blue-500/50 transition-all group">
+                            <div className="w-16 h-16 bg-blue-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <Icon name="Bot" size={32} className="text-blue-400" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-3">🎯 我有想法，但不会写代码</h3>
+                            <p className="text-gray-400 mb-6 leading-relaxed">
+                                用自然语言描述你的交易策略，AI Copilot 帮你自动生成完整代码。
+                            </p>
+                            <ul className="space-y-3 text-gray-300 text-sm mb-6">
+                                <li className="flex items-start gap-2">
+                                    <Icon name="Check" size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                                    <span>用自然语言描述策略思路</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Icon name="Check" size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                                    <span>AI 自动生成优化代码</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Icon name="Check" size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                                    <span>支持 TradingView 公式转换</span>
+                                </li>
+                            </ul>
+                            <a href="lab.html" className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium">
+                                免费试用 AI 生成 <Icon name="ArrowUpRight" size={16} />
+                            </a>
+                        </div>
+
+                        {/* 场景2: 我要租策略 */}
+                        <div className="bg-gradient-to-br from-green-500/10 to-transparent border border-gray-800 rounded-2xl p-8 hover:border-green-500/50 transition-all group">
+                            <div className="w-16 h-16 bg-green-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <Icon name="DollarSign" size={32} className="text-green-400" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-3">💰 我要租用成熟策略，躺着赚钱</h3>
+                            <p className="text-gray-400 mb-6 leading-relaxed">
+                                3000+ 经过验证的策略，透明的历史数据，一键订阅自动运行。
+                            </p>
+                            <ul className="space-y-3 text-gray-300 text-sm mb-6">
+                                <li className="flex items-start gap-2">
+                                    <Icon name="Check" size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                                    <span>3000+ 验证策略可选</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Icon name="Check" size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                                    <span>透明历史回测数据</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Icon name="Check" size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                                    <span>一键订阅自动部署</span>
+                                </li>
+                            </ul>
+                            <a href="marketplace.html" className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 font-medium">
+                                浏览策略市场 <Icon name="ArrowUpRight" size={16} />
+                            </a>
+                        </div>
+
+                        {/* 场景3: 我会编程 */}
+                        <div className="bg-gradient-to-br from-purple-500/10 to-transparent border border-gray-800 rounded-2xl p-8 hover:border-purple-500/50 transition-all group">
+                            <div className="w-16 h-16 bg-purple-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <Icon name="Code" size={32} className="text-purple-400" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-3">🛠️ 我会编程，想深度定制策略</h3>
+                            <p className="text-gray-400 mb-6 leading-relaxed">
+                                完整 Python SDK，内置算法库，Rust 性能加速，自由定制。
+                            </p>
+                            <ul className="space-y-3 text-gray-300 text-sm mb-6">
+                                <li className="flex items-start gap-2">
+                                    <Icon name="Check" size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                                    <span>完整 Python SDK + 文档</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Icon name="Check" size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                                    <span>内置算法库开箱即用</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Icon name="Check" size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
+                                    <span>Rust 加速比 Python 快 100 倍</span>
+                                </li>
+                            </ul>
+                            <a href="lab.html" className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 font-medium">
+                                查看开发文档 <Icon name="ArrowUpRight" size={16} />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const CoreFeatures = () => (
+            <div className="py-20 bg-[#161822]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl font-bold text-white mb-4">0 门槛核心功能</h2>
+                        <p className="text-gray-400 text-lg">从想法到实盘，我们帮你搞定一切技术难题</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="bg-[#0b0c15] border border-gray-800 rounded-xl p-6 hover:border-green-500/50 transition-all group">
+                            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Icon name="Bot" size={24} className="text-blue-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-3">AI 策略生成器</h3>
+                            <ul className="space-y-2 text-gray-400 text-sm mb-4">
+                                <li>• 自然语言描述即可</li>
+                                <li>• 支持中英文</li>
+                                <li>• 30秒生成完整代码</li>
+                                <li>• TradingView 兼容</li>
+                            </ul>
+                            <a href="lab.html" className="text-blue-400 text-sm font-medium hover:text-blue-300">立即体验 →</a>
+                        </div>
+                        
+                        <div className="bg-[#0b0c15] border border-gray-800 rounded-xl p-6 hover:border-green-500/50 transition-all group">
+                            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Icon name="BarChart" size={24} className="text-green-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-3">精准回测引擎</h3>
+                            <ul className="space-y-2 text-gray-400 text-sm mb-4">
+                                <li>• 5年历史 Tick 数据</li>
+                                <li>• 毫秒级精度</li>
+                                <li>• 10分钟完成回测</li>
+                                <li>• 支持期货/现货/合约</li>
+                            </ul>
+                            <a href="lab.html" className="text-green-400 text-sm font-medium hover:text-green-300">免费回测 →</a>
+                        </div>
+
+                        <div className="bg-[#0b0c15] border border-gray-800 rounded-xl p-6 hover:border-green-500/50 transition-all group">
+                            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Icon name="Settings" size={24} className="text-purple-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-3">智能参数优化</h3>
+                            <ul className="space-y-2 text-gray-400 text-sm mb-4">
+                                <li>• AI 自动寻找最优参数</li>
+                                <li>• 网格搜索+遗传算法</li>
+                                <li>• 避免过拟合</li>
+                                <li>• 可视化结果对比</li>
+                            </ul>
+                            <a href="lab.html" className="text-purple-400 text-sm font-medium hover:text-purple-300">智能优化 →</a>
+                        </div>
+
+                        <div className="bg-[#0b0c15] border border-gray-800 rounded-xl p-6 hover:border-green-500/50 transition-all group">
+                            <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Icon name="Rocket" size={24} className="text-orange-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-3">一键云端部署</h3>
+                            <ul className="space-y-2 text-gray-400 text-sm mb-4">
+                                <li>• 无需购买服务器</li>
+                                <li>• 30秒完成部署</li>
+                                <li>• Co-location 加速</li>
+                                <li>• 7x24 小时运行</li>
+                            </ul>
+                            <a href="dashboard.html" className="text-orange-400 text-sm font-medium hover:text-orange-300">立即部署 →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Features = () => (
+            <div className="py-20 bg-[#161822]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                        <div>
+                            <div className="inline-block px-3 py-1 bg-blue-500/10 text-blue-400 rounded-full text-xs font-semibold mb-4 border border-blue-500/20">QUANT LAB</div>
+                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Python 的易用性，<br /><span className="text-orange-500">Rust</span> 的极致性能。</h2>
+                            <p className="text-gray-400 text-lg mb-8 leading-relaxed">OpenQuant 提供高性能 Rust 内核的 Python 封装。配合内置的 AI Copilot，您可以直接用自然语言描述策略，系统自动生成优化的代码。</p>
+                            <ul className="space-y-4">
+                                {[{title:"Co-location 直连", desc:"您的策略直接运行在交易所机房隔壁。"}, {title:"Tick 级极速回测", desc:"比传统 Python 框架快 50-100 倍的回测引擎。"}, {title:"AI 策略翻译官", desc:"从 TradingView 脚本一键转换为 OpenQuant Rust 代码。"}].map((item,i)=>(
+                                    <li key={i} className="flex items-start gap-3">
+                                        <div className="bg-green-500/20 p-1 rounded text-green-400 mt-1 flex-shrink-0"><Icon name="Check" size={16} /></div>
+                                        <div><h4 className="text-white font-medium">{item.title}</h4><p className="text-gray-500 text-sm">{item.desc}</p></div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="relative">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-green-500 rounded-xl blur opacity-30"></div>
+                            <div className="relative bg-[#0b0c15] border border-gray-700 rounded-xl overflow-hidden shadow-2xl">
+                                <div className="flex items-center justify-between px-4 py-3 bg-[#13151f] border-b border-gray-800">
+                                    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><div className="w-3 h-3 rounded-full bg-yellow-500"></div><div className="w-3 h-3 rounded-full bg-green-500"></div></div>
+                                    <span className="text-xs text-gray-500 font-mono">strategy_v1.py (Rust Core)</span>
+                                </div>
+                                <div className="p-6 overflow-hidden font-mono text-sm leading-6">
+                                    <div className="flex">
+                                        <div className="text-gray-600 select-none pr-4 text-right">1<br/>2<br/>3<br/>4<br/>5<br/>6</div>
+                                        <div className="text-gray-300">
+                                            <span className="text-purple-400">import</span> openquant <span className="text-purple-400">as</span> oq<br/>
+                                            <span className="text-blue-400">@oq.rust_accelerate</span><br/>
+                                            <span className="text-purple-400">def</span> <span className="text-yellow-300">on_tick</span>(ctx, tick):<br/>
+                                            &nbsp;&nbsp;<span className="text-purple-400">if</span> tick.price &gt; ctx.ma:<br/>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;oq.buy(<span className="text-green-400">'BTC'</span>, <span className="text-orange-400">1.0</span>)<br/>
+                                            <span className="text-green-500/80">&gt;&gt; Backtest done in 0.04s.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="absolute bottom-4 right-4 bg-[#1e293b] border border-blue-500/30 p-3 rounded-lg shadow-xl max-w-xs animate-pulse-slow">
+                                    <div className="flex items-start gap-3">
+                                        <div className="bg-blue-600 p-1.5 rounded-md text-white"><Icon name="Bot" size={16} /></div>
+                                        <div><p className="text-xs text-gray-300">建议使用 Iceberg 算法拆单以减少滑点。</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const BuiltInAlgorithms = () => (
+            <div className="py-20 bg-[#0b0c15] border-t border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                        <div>
+                            <div className="inline-block px-3 py-1 bg-orange-500/10 text-orange-400 rounded-full text-xs font-semibold mb-4 border border-orange-500/20">内置算法库</div>
+                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">📦 不用自己写算法<br/>系统已内置</h2>
+                            <p className="text-gray-400 text-lg mb-8 leading-relaxed">
+                                很多人有策略思路，但下单算法写不好 ❌<br/>
+                                OpenQuant 内置机构级算法，开箱即用 ✅
+                            </p>
+                            <div className="space-y-3 mb-8">
+                                {[
+                                    {name:"TWAP", desc:"时间加权平均 - 均匀分批买入"},
+                                    {name:"VWAP", desc:"成交量加权 - 跟随市场节奏"},
+                                    {name:"Iceberg", desc:"冰山算法 - 隐藏真实委托量"},
+                                    {name:"POV", desc:"成交量百分比 - 不冲击市场"},
+                                    {name:"Smart Router", desc:"智能路由 - 跨所最优价"},
+                                    {name:"Stop Loss/Take Profit", desc:"自动止盈止损"}
+                                ].map((algo,i)=>(
+                                    <div key={i} className="flex items-start gap-3">
+                                        <div className="bg-orange-500/20 p-1 rounded text-orange-400 mt-1 flex-shrink-0"><Icon name="Package" size={16} /></div>
+                                        <div><h4 className="text-white font-medium">{algo.name}</h4><p className="text-gray-500 text-sm">{algo.desc}</p></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="relative">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 to-red-500 rounded-xl blur opacity-30"></div>
+                            <div className="relative bg-[#0b0c15] border border-gray-700 rounded-xl overflow-hidden shadow-2xl">
+                                <div className="flex items-center justify-between px-4 py-3 bg-[#13151f] border-b border-gray-800">
+                                    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><div className="w-3 h-3 rounded-full bg-yellow-500"></div><div className="w-3 h-3 rounded-full bg-green-500"></div></div>
+                                    <span className="text-xs text-gray-500 font-mono">my_strategy.py</span>
+                                </div>
+                                <div className="p-6 overflow-hidden font-mono text-sm leading-6">
+                                    <div className="text-gray-500 mb-4"># 传统方式：需要自己写几百行拆单逻辑 ❌</div>
+                                    <div className="text-gray-500 mb-6"># OpenQuant：一行代码搞定 ✅</div>
+                                    <div className="text-gray-300">
+                                        <span className="text-purple-400">import</span> openquant <span className="text-purple-400">as</span> oq<br/><br/>
+                                        <span className="text-gray-500"># TWAP 算法 - 300秒内均匀买入</span><br/>
+                                        oq.<span className="text-yellow-300">buy_twap</span>(<span className="text-green-400">'BTC'</span>, <span className="text-orange-400">1.0</span>, duration=<span className="text-orange-400">300</span>)<br/><br/>
+                                        <span className="text-gray-500"># Iceberg 算法 - 隐藏真实委托量</span><br/>
+                                        oq.<span className="text-yellow-300">buy_iceberg</span>(<span className="text-green-400">'ETH'</span>, <span className="text-orange-400">10</span>, show=<span className="text-orange-400">0.5</span>)<br/><br/>
+                                        <span className="text-gray-500"># Smart Router - 自动找最优价</span><br/>
+                                        oq.<span className="text-yellow-300">buy_smart</span>(<span className="text-green-400">'BTC'</span>, <span className="text-orange-400">2.0</span>)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const ExchangeSupport = () => {
+            const exchanges = [
+                {name: "Binance", logo: "🅱️"},
+                {name: "OKX", logo: "⭕"},
+                {name: "Bybit", logo: "🅱️"},
+                {name: "Gate.io", logo: "🔷"},
+                {name: "Huobi", logo: "🔶"},
+                {name: "Kraken", logo: "🐙"},
+                {name: "Coinbase", logo: "🔵"},
+                {name: "KuCoin", logo: "🟢"},
+                {name: "Bitfinex", logo: "🟩"},
+                {name: "Bitget", logo: "🔸"},
+                {name: "MEXC", logo: "🔹"},
+                {name: "Deribit", logo: "🔺"}
+            ];
+            
+            return (
+                <div className="py-20 bg-[#161822] border-y border-gray-800">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-12">
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-sm font-medium mb-4">
+                                <Icon name="Globe" size={14} />
+                                <span>一键接入</span>
+                            </div>
+                            <h2 className="text-4xl font-bold text-white mb-4">支持 20+ 主流交易所</h2>
+                            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                                无需对接每个交易所 API，统一接口一行代码切换
+                            </p>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
+                            {exchanges.map((ex, i) => (
+                                <div key={i} className="bg-[#0b0c15] border border-gray-800 rounded-lg p-4 flex flex-col items-center justify-center hover:border-green-500/50 transition-all group cursor-pointer">
+                                    <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{ex.logo}</div>
+                                    <div className="text-white text-sm font-medium">{ex.name}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="bg-[#0b0c15] border border-gray-800 rounded-xl p-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                                <div>
+                                    <h3 className="text-xl font-bold text-white mb-4">切换交易所只需改一个参数</h3>
+                                    <div className="space-y-3 text-gray-300">
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="Check" size={16} className="text-green-400" />
+                                            <span>统一 API 接口</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="Check" size={16} className="text-green-400" />
+                                            <span>自动处理限频</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="Check" size={16} className="text-green-400" />
+                                            <span>智能故障切换</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-[#13151f] rounded-lg p-4 font-mono text-sm">
+                                    <div className="text-gray-500 mb-2"># 切换交易所示例</div>
+                                    <div className="text-gray-300">
+                                        oq.<span className="text-yellow-300">set_exchange</span>(<span className="text-green-400">'binance'</span>)<br/>
+                                        oq.<span className="text-yellow-300">set_exchange</span>(<span className="text-green-400">'okx'</span>)<br/>
+                                        oq.<span className="text-yellow-300">set_exchange</span>(<span className="text-green-400">'bybit'</span>)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const StrategySquarePreview = () => {
+            const strategies = [
+                { title: "Alpha Hunter V2", author: "OpenQuant Labs", apy: "28.4", drawdown: "-3.2", sharpe: "2.8", tags: ["Official", "Rust"], trend: [100, 102, 101, 104, 106, 105, 108, 110, 109, 112, 115, 114, 118, 120, 122] },
+                { title: "BTC Grid Master", author: "QuantWhale", apy: "15.2", drawdown: "-1.1", sharpe: "1.9", tags: ["Grid", "Low Risk"], trend: [100, 100.5, 101, 101.5, 102, 102.5, 103, 103.5, 104, 104.5, 105, 105.5, 106] },
+                { title: "ETH Swing Pro", author: "OpenQuant Labs", apy: "32.1", drawdown: "-5.4", sharpe: "2.1", tags: ["Official", "Trend"], trend: [100, 98, 96, 102, 108, 105, 112, 110, 118, 125, 120, 128, 135] }
+            ];
+            return (
+                <div className="bg-[#0b0c15] py-16 border-t border-gray-800">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-end mb-10">
+                            <h2 className="text-3xl font-bold text-white">精选策略</h2>
+                            <a href="marketplace.html" className="text-green-400 hover:text-green-300 text-sm font-medium flex items-center gap-1">查看全部 <Icon name="ArrowUpRight" size={14} /></a>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {strategies.map((s, i) => (
+                                <div key={i} onClick={() => window.location.href='marketplace.html'} className="bg-[#161822] hover:bg-[#1c1e2b] border border-gray-800 hover:border-green-500/50 rounded-xl p-5 transition-all cursor-pointer group">
+                                    <div className="flex justify-between mb-4"><h3 className="text-white font-semibold group-hover:text-green-400">{s.title}</h3><span className="text-green-400 font-mono">{s.apy}% APY</span></div>
+                                    <Sparkline data={s.trend} height={40} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const NoInfraNeeded = () => (
+            <div className="py-20 bg-[#0b0c15] border-t border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-4xl font-bold text-white mb-4">🏗️ 不用做基建，也能跑专业级量化策略</h2>
+                        <p className="text-gray-400 text-lg">省去 3-6 个月基建时间，专注策略本身</p>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                        <table className="w-full bg-[#161822] border border-gray-800 rounded-xl overflow-hidden">
+                            <thead className="bg-[#13151f]">
+                                <tr>
+                                    <th className="px-6 py-4 text-left text-gray-400 font-medium">基础设施</th>
+                                    <th className="px-6 py-4 text-center text-gray-400 font-medium">传统方式</th>
+                                    <th className="px-6 py-4 text-center text-green-400 font-medium">OpenQuant</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800">
+                                {[
+                                    {item: "服务器", traditional: "自己购买", openquant: "✅ 云端托管"},
+                                    {item: "网络延迟", traditional: "100-300ms", openquant: "✅ <2ms (Co-lo)"},
+                                    {item: "数据源", traditional: "自己爬取", openquant: "✅ 实时提供"},
+                                    {item: "交易算法", traditional: "自己实现", openquant: "✅ 内置 10+ 种"},
+                                    {item: "监控报警", traditional: "自己搭建", openquant: "✅ 开箱即用"},
+                                    {item: "故障恢复", traditional: "手动处理", openquant: "✅ 自动切换"},
+                                    {item: "参数优化", traditional: "手动调整", openquant: "✅ AI 智能优化"},
+                                    {item: "策略回测", traditional: "搭建环境", openquant: "✅ 在线回测"}
+                                ].map((row, i) => (
+                                    <tr key={i} className="hover:bg-[#1a1d2e] transition-colors">
+                                        <td className="px-6 py-4 text-white font-medium">{row.item}</td>
+                                        <td className="px-6 py-4 text-center text-gray-400">{row.traditional}</td>
+                                        <td className="px-6 py-4 text-center text-green-400 font-medium">{row.openquant}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Timeline = () => (
+            <div className="py-20 bg-[#161822]">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl font-bold text-white mb-4">⏱️ 从想法到实盘，只需 15 分钟</h2>
+                        <p className="text-gray-400 text-lg">新手用户平均 2 小时完成首个实盘策略</p>
+                    </div>
+                    
+                    <div className="relative">
+                        {/* 连接线 */}
+                        <div className="hidden md:block absolute top-24 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 via-green-500 to-purple-500"></div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {/* Step 1 */}
+                            <div className="relative">
+                                <div className="bg-[#0b0c15] border border-blue-500/50 rounded-2xl p-8 text-center">
+                                    <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-[#161822] relative z-10">
+                                        <span className="text-2xl font-bold text-blue-400">1</span>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-white mb-2">生成策略</h3>
+                                    <div className="text-4xl font-bold text-blue-400 mb-4">5 分钟</div>
+                                    <p className="text-gray-400 mb-4">用 AI 生成代码<br/>或从市场选择策略</p>
+                                    <div className="text-xs text-gray-500">
+                                        自然语言描述 → AI 生成完整代码
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Step 2 */}
+                            <div className="relative">
+                                <div className="bg-[#0b0c15] border border-green-500/50 rounded-2xl p-8 text-center">
+                                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-[#161822] relative z-10">
+                                        <span className="text-2xl font-bold text-green-400">2</span>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-white mb-2">回测验证</h3>
+                                    <div className="text-4xl font-bold text-green-400 mb-4">10 分钟</div>
+                                    <p className="text-gray-400 mb-4">历史数据验证<br/>智能参数优化</p>
+                                    <div className="text-xs text-gray-500">
+                                        5年历史数据 → AI 优化参数
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Step 3 */}
+                            <div className="relative">
+                                <div className="bg-[#0b0c15] border border-purple-500/50 rounded-2xl p-8 text-center">
+                                    <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-[#161822] relative z-10">
+                                        <span className="text-2xl font-bold text-purple-400">3</span>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-white mb-2">一键部署</h3>
+                                    <div className="text-4xl font-bold text-purple-400 mb-4">30 秒</div>
+                                    <p className="text-gray-400 mb-4">自动部署云端<br/>7x24 运行监控</p>
+                                    <div className="text-xs text-gray-500">
+                                        一键部署 → 自动运行
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                        <div className="bg-[#0b0c15] border border-gray-800 rounded-xl p-6">
+                            <div className="text-3xl font-bold text-green-400 mb-2">85%</div>
+                            <div className="text-gray-400">相比传统方式<br/>节省开发时间</div>
+                        </div>
+                        <div className="bg-[#0b0c15] border border-gray-800 rounded-xl p-6">
+                            <div className="text-3xl font-bold text-green-400 mb-2">2 小时</div>
+                            <div className="text-gray-400">新手用户<br/>快速上手</div>
+                        </div>
+                        <div className="bg-[#0b0c15] border border-gray-800 rounded-xl p-6">
+                            <div className="text-3xl font-bold text-green-400 mb-2">0</div>
+                            <div className="text-gray-400">不需要任何<br/>运维知识</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const SocialProof = () => (
+            <div className="py-20 bg-[#0b0c15] border-t border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl font-bold text-white mb-4">📊 已有 5,000+ 量化交易者选择 OpenQuant</h2>
+                        <p className="text-gray-400 text-lg">加入我们，开启你的量化交易之旅</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+                        <div className="bg-[#161822] border border-gray-800 rounded-xl p-8 text-center">
+                            <Icon name="BarChart" size={32} className="text-green-400 mx-auto mb-4" />
+                            <div className="text-4xl font-bold text-white mb-2">8,500+</div>
+                            <div className="text-gray-400">运行中的策略</div>
+                        </div>
+                        <div className="bg-[#161822] border border-gray-800 rounded-xl p-8 text-center">
+                            <Icon name="Users" size={32} className="text-blue-400 mx-auto mb-4" />
+                            <div className="text-4xl font-bold text-white mb-2">3,000+</div>
+                            <div className="text-gray-400">注册用户</div>
+                        </div>
+                        <div className="bg-[#161822] border border-gray-800 rounded-xl p-8 text-center">
+                            <Icon name="Zap" size={32} className="text-purple-400 mx-auto mb-4" />
+                            <div className="text-4xl font-bold text-white mb-2">85%</div>
+                            <div className="text-gray-400">时间节省</div>
+                        </div>
+                        <div className="bg-[#161822] border border-gray-800 rounded-xl p-8 text-center">
+                            <Icon name="Clock" size={32} className="text-orange-400 mx-auto mb-4" />
+                            <div className="text-4xl font-bold text-white mb-2">2 小时</div>
+                            <div className="text-gray-400">快速上手</div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="bg-[#161822] border border-gray-800 rounded-xl p-8">
+                            <div className="flex items-start gap-4 mb-4">
+                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">张</div>
+                                <div>
+                                    <div className="text-white font-bold mb-1">张华 - 个人投资者</div>
+                                    <div className="text-gray-500 text-sm">北京 · 使用 3 个月</div>
+                                </div>
+                            </div>
+                            <p className="text-gray-300 leading-relaxed">
+                                "作为量化新手，我用 OpenQuant <span className="text-green-400 font-semibold">2 天就上线了第一个策略</span>。AI 生成代码功能太强大了，完全不需要从零学编程。现在已经稳定运行了 3 个月。"
+                            </p>
+                        </div>
+
+                        <div className="bg-[#161822] border border-gray-800 rounded-xl p-8">
+                            <div className="flex items-start gap-4 mb-4">
+                                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">李</div>
+                                <div>
+                                    <div className="text-white font-bold mb-1">李明 - 量化私募创始人</div>
+                                    <div className="text-gray-500 text-sm">上海 · 使用 1 年</div>
+                                </div>
+                            </div>
+                            <p className="text-gray-300 leading-relaxed">
+                                "不用再招运维工程师了，<span className="text-green-400 font-semibold">节省了团队 50% 的人力成本</span>。Co-location 的延迟优势让我们的套利策略收益提升了 30%，非常满意。"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Footer = () => (
+            <footer className="bg-[#0b0c15] py-12 border-t border-gray-900 text-center text-gray-500 text-sm">
+                <p className="mb-2 font-bold text-white">OpenQuant</p>
+                <p>&copy; 2025 OpenQuant Technology.</p>
+            </footer>
+        );
+
+        const App = () => (
+            <div className="min-h-screen">
+                <Navbar />
+                <Hero />
+                <UserScenarios />
+                <CoreFeatures />
+                <BuiltInAlgorithms />
+                <ExchangeSupport />
+                <StrategySquarePreview />
+                <NoInfraNeeded />
+                <Timeline />
+                <SocialProof />
+                <Features />
+                <Footer />
+            </div>
+        );
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

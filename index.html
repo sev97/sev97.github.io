@@ -116,68 +116,140 @@
         );
 
         const Hero = () => {
-            const [cloudPing, setCloudPing] = useState(1.2);
-            useEffect(() => {
-                const interval = setInterval(() => {
-                    setCloudPing((Math.random() * (2.0 - 0.8) + 0.8).toFixed(2));
-                }, 1000);
-                return () => clearInterval(interval);
-            }, []);
+            const [aiInput, setAiInput] = useState('');
+            const [showAIResponse, setShowAIResponse] = useState(false);
+            
+            const quickStrategies = [
+                { title: "双均线策略", desc: "主板、创业板和科创板，沪深300成分股", icon: "📈" },
+                { title: "成长因子选股", desc: "请实现一个基于成长因子的选股策略", icon: "🚀" },
+                { title: "换手率波动性", desc: "20日换手率和波动率差异", icon: "📊" },
+                { title: "破净股策略", desc: "价格小于每股资产净值", icon: "💎" },
+                { title: "红利策略", desc: "股息率降序排列；上市时间大于3年", icon: "💰" },
+                { title: "超跌反弹策略", desc: "收盘价在250日收盘中的排名", icon: "⚡" },
+                { title: "基本面选股", desc: "非st、非科创板，市值大于50亿", icon: "🎯" },
+                { title: "网格交易", desc: "震荡市场自动高抛低吸", icon: "🔷" }
+            ];
+
+            const handleAISubmit = () => {
+                if (!aiInput.trim()) return;
+                setShowAIResponse(true);
+                // 实际应用中这里会调用 AI API
+                setTimeout(() => {
+                    window.location.href = 'lab.html';
+                }, 1500);
+            };
+
             return (
-                <div className="relative pt-32 pb-16 sm:pt-40 sm:pb-20 overflow-hidden">
+                <div className="relative pt-24 pb-16 overflow-hidden">
                     <div className="absolute top-0 left-1/2 w-full -translate-x-1/2 h-full z-0 pointer-events-none">
                          <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[100px]"></div>
                          <div className="absolute top-[20%] right-[20%] w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px]"></div>
                     </div>
-                    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-sm font-medium mb-8">
-                            <Icon name="Zap" size={14} />
-                            <span>0 编程门槛 · AI 驱动 · 一键部署</span>
-                        </div>
-                        <h1 className="text-5xl sm:text-6xl font-extrabold text-white tracking-tight mb-6">
-                            人人都能做量化<br/>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">0门槛开启财富增长</span>
-                        </h1>
-                        <div className="mt-6 max-w-3xl mx-auto space-y-3 text-lg text-gray-300 mb-10">
-                            <div className="flex items-center justify-center gap-3">
-                                <Icon name="Check" size={20} className="text-green-400 flex-shrink-0" />
-                                <span>AI 自动生成策略代码 - 不需要编程基础</span>
-                            </div>
-                            <div className="flex items-center justify-center gap-3">
-                                <Icon name="Check" size={20} className="text-green-400 flex-shrink-0" />
-                                <span>内置 10+ 交易算法 - 不用自己写算法</span>
-                            </div>
-                            <div className="flex items-center justify-center gap-3">
-                                <Icon name="Check" size={20} className="text-green-400 flex-shrink-0" />
-                                <span>一键部署到云端 - 不需要服务器运维</span>
-                            </div>
-                        </div>
-                        <div className="flex justify-center gap-4 mb-12">
-                            <a href="dashboard.html" className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-green-500/30 flex items-center gap-2">
-                                立即免费开始 <Icon name="ArrowUpRight" size={18} />
-                            </a>
-                            <a href="#demo" className="bg-[#161822] hover:bg-gray-800 border border-gray-700 text-white px-8 py-3 rounded-lg font-medium transition-all">
-                                观看演示视频
-                            </a>
-                        </div>
-                        <div className="max-w-2xl mx-auto">
-                            <div className="bg-[#13151f] border border-green-500/30 rounded-xl p-6 flex items-center justify-between relative overflow-hidden neon-border-green">
-                                <div className="absolute inset-0 bg-green-500/5"></div>
-                                <div className="flex flex-col text-left relative z-10">
-                                    <span className="text-green-500/80 text-sm font-mono mb-1 flex items-center gap-2">
-                                        <Icon name="Server" size={12} /> OPENQUANT CO-LOCATION
-                                    </span>
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-4xl font-bold text-green-400 font-mono neon-text-green">{cloudPing}</span>
-                                        <span className="text-gray-400 text-sm">ms 延迟</span>
-                                    </div>
-                                    <span className="text-xs text-green-400/60 mt-2 flex items-center gap-1">
-                                        <Icon name="CheckCircle" size={12} /> 比本地快 100 倍
-                                    </span>
+                    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                            {/* 左侧：介绍 */}
+                            <div className="text-left">
+                                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-sm font-medium mb-6">
+                                    <Icon name="Zap" size={14} />
+                                    <span>AI 驱动 · 0 编程门槛 · 一键部署</span>
                                 </div>
-                                <div className="w-16 h-16 rounded-full border-4 border-green-500/30 flex items-center justify-center relative">
-                                    <div className="absolute inset-0 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                                    <Icon name="Zap" className="text-green-400" />
+                                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6">
+                                    OpenQuant<br/>
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">AI量化投资交易平台</span>
+                                </h1>
+                                <p className="text-xl text-gray-400 mb-8 leading-relaxed">
+                                    以AI赋能投资，为投资者提供企业级AI平台、量化投资大数据、AI投研工具、Quant成长体系和社区
+                                </p>
+                                <div className="space-y-3 text-gray-300 mb-8">
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="Check" size={20} className="text-green-400 flex-shrink-0" />
+                                        <span>AI 自动生成策略代码 - 不需要编程基础</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="Check" size={20} className="text-green-400 flex-shrink-0" />
+                                        <span>内置 10+ 交易算法 - 不用自己写算法</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="Check" size={20} className="text-green-400 flex-shrink-0" />
+                                        <span>Co-location 加速 - 比本地快 100 倍</span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4">
+                                    <a href="dashboard.html" className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-green-500/30 flex items-center gap-2">
+                                        立即免费开始 <Icon name="ArrowUpRight" size={18} />
+                                    </a>
+                                    <a href="marketplace.html" className="bg-[#161822] hover:bg-gray-800 border border-gray-700 text-white px-8 py-3 rounded-lg font-medium transition-all">
+                                        浏览策略
+                                    </a>
+                                </div>
+                            </div>
+
+                            {/* 右侧：AI Quant Agent */}
+                            <div className="bg-gradient-to-br from-[#13151f] to-[#0b0c15] border border-gray-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 rounded-full blur-[80px]"></div>
+                                <div className="relative">
+                                    {/* Alpha 标签 */}
+                                    <div className="absolute -top-4 -right-4 bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                        Alpha版
+                                    </div>
+                                    
+                                    <div className="mb-6">
+                                        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 mb-2">
+                                            Quant Agent
+                                        </h2>
+                                        <p className="text-gray-400 text-sm">您的智能投研助手</p>
+                                    </div>
+
+                                    {/* 输入框 */}
+                                    <div className="mb-6">
+                                        <div className="relative">
+                                            <textarea
+                                                value={aiInput}
+                                                onChange={(e) => setAiInput(e.target.value)}
+                                                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleAISubmit())}
+                                                placeholder="请输入入您的策略想法（Shift + Enter换行）"
+                                                className="w-full bg-[#0b0c15] border border-gray-700 focus:border-green-500 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none resize-none transition-colors"
+                                                rows="3"
+                                            />
+                                            <button 
+                                                onClick={handleAISubmit}
+                                                className="absolute bottom-3 right-3 bg-green-600 hover:bg-green-500 text-white p-2 rounded-lg transition-colors"
+                                            >
+                                                <Icon name="ArrowUpRight" size={20} />
+                                            </button>
+                                        </div>
+                                        {showAIResponse && (
+                                            <div className="mt-3 bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-400">
+                                                ✨ 正在为您生成策略，即将跳转到实验室...
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* 快速策略模板 */}
+                                    <div className="space-y-2">
+                                        <div className="text-xs text-gray-500 mb-3">💡 快速开始 - 点击使用模板：</div>
+                                        <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto">
+                                            {quickStrategies.map((strategy, i) => (
+                                                <div
+                                                    key={i}
+                                                    onClick={() => setAiInput(strategy.desc)}
+                                                    className="bg-[#0b0c15] hover:bg-[#161822] border border-gray-800 hover:border-green-500/50 rounded-lg p-3 cursor-pointer transition-all group"
+                                                >
+                                                    <div className="flex items-start gap-2 mb-1">
+                                                        <span className="text-lg">{strategy.icon}</span>
+                                                        <div className="flex-grow">
+                                                            <div className="text-sm font-semibold text-white group-hover:text-green-400 transition-colors mb-1">
+                                                                {strategy.title}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500 line-clamp-2">
+                                                                {strategy.desc}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

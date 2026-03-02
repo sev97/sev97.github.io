@@ -1,0 +1,2149 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenQuant 产品设计规范 v2.0</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1677ff;--primary-light:#e6f4ff;--primary-dark:#0958d9;
+  --success:#52c41a;--warning:#faad14;--danger:#ff4d4f;
+  --text:#1d2129;--text2:#4e5969;--text3:#86909c;
+  --border:#e5e6eb;--bg:#f2f3f5;--bg2:#f7f8fa;--white:#fff;
+  --done-bg:#f6ffed;--done-border:#b7eb8f;--done-text:#389e0d;
+  --todo-bg:#fff7e6;--todo-border:#ffd591;--todo-text:#d46b08;
+  --sidebar:260px;--topbar:56px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;font-size:14px;color:var(--text);background:var(--bg);}
+
+/* ── Layout ── */
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;z-index:200;}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:var(--primary);}
+.logo-box{width:28px;height:28px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.topbar-meta{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:12px;color:var(--text3);}
+.ver-tag{background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:10px;font-weight:600;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;}
+
+.sidebar{position:fixed;top:var(--topbar);left:0;bottom:0;width:var(--sidebar);background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:16px 8px;z-index:100;}
+.sidebar-group-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px 4px;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);margin-bottom:1px;text-decoration:none;transition:all .15s;}
+.nav-item:hover{background:var(--bg2);color:var(--primary);}
+.nav-item.active{background:var(--primary-light);color:var(--primary);font-weight:500;}
+.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.nav-dot.done{background:var(--success);}
+.nav-dot.todo{background:var(--warning);}
+
+.content{margin-left:var(--sidebar);margin-top:var(--topbar);padding:32px 40px;max-width:1100px;}
+
+/* ── Section ── */
+.section{margin-bottom:56px;scroll-margin-top:calc(var(--topbar) + 20px);}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid var(--border);}
+.section-header h2{font-size:20px;font-weight:700;}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;}
+.badge-done{background:var(--done-bg);color:var(--done-text);border:1px solid var(--done-border);}
+.badge-todo{background:var(--todo-bg);color:var(--todo-text);border:1px solid var(--todo-border);}
+.badge-mid{background:#f9f0ff;color:#531dab;border:1px solid #d3adf7;}
+.badge-ops{background:#fff0f6;color:#c41d7f;border:1px solid #ffadd2;}
+.section-desc{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px;background:var(--bg2);border-left:3px solid var(--primary);padding:12px 16px;border-radius:0 6px 6px 0;}
+
+/* ── Screenshot ── */
+.screenshot-wrap{border-radius:10px;overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 16px rgba(0,0,0,.08);margin-bottom:20px;}
+.screenshot-wrap img{width:100%;display:block;}
+.screenshot-caption{background:var(--bg2);padding:8px 14px;font-size:12px;color:var(--text3);border-top:1px solid var(--border);}
+
+/* ── Feature list ── */
+.feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;}
+.feature-item{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.feature-item h4{font-size:13px;font-weight:600;margin-bottom:6px;}
+.feature-item p{font-size:12px;color:var(--text2);line-height:1.6;}
+
+/* ── Wireframe ── */
+.wireframe{border-radius:10px;border:2px dashed #d0e4ff;background:#fafcff;padding:0;overflow:hidden;margin-bottom:20px;}
+.wireframe-bar{background:linear-gradient(135deg,#1677ff,#0958d9);padding:10px 16px;display:flex;align-items:center;gap:8px;}
+.wireframe-bar span{color:rgba(255,255,255,.8);font-size:12px;}
+.wireframe-bar .wf-title{color:#fff;font-weight:600;font-size:13px;margin-right:auto;}
+.wf-body{padding:20px;}
+
+/* Wireframe components */
+.wf-row{display:flex;gap:12px;margin-bottom:12px;}
+.wf-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px;}
+.wf-card.flex1{flex:1;}
+.wf-label{font-size:11px;color:var(--text3);margin-bottom:4px;}
+.wf-val{font-size:20px;font-weight:700;}
+.wf-val.green{color:var(--success);}
+.wf-val.red{color:var(--danger);}
+.wf-val.blue{color:var(--primary);}
+.wf-placeholder{background:var(--bg2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px;}
+.wf-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.wf-table th{background:var(--bg2);padding:10px 12px;text-align:left;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);}
+.wf-table td{padding:10px 12px;font-size:12px;border-bottom:1px solid var(--border);}
+.wf-table tr:last-child td{border-bottom:none;}
+.wf-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;}
+.wf-tag.green{background:#f6ffed;color:var(--success);}
+.wf-tag.blue{background:var(--primary-light);color:var(--primary);}
+.wf-tag.orange{background:#fff7e6;color:#fa8c16;}
+.wf-tag.red{background:#fff2f0;color:var(--danger);}
+.chart-box{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;}
+.chart-box h4{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text2);}
+.mini-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.mini-stat{background:var(--bg2);border-radius:6px;padding:10px;text-align:center;}
+.mini-stat .k{font-size:11px;color:var(--text3);}
+.mini-stat .v{font-size:15px;font-weight:700;margin-top:2px;}
+
+/* Form elements */
+.wf-form-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;}
+.wf-input{height:32px;border:1px solid var(--border);border-radius:5px;background:#fff;display:flex;align-items:center;padding:0 10px;font-size:12px;color:var(--text2);}
+.wf-select{height:32px;border:1px solid var(--border);border-radius:5px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:12px;color:var(--text2);}
+.wf-btn{height:32px;padding:0 14px;border-radius:5px;border:none;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.wf-btn.primary{background:var(--primary);color:#fff;}
+.wf-btn.default{background:#fff;color:var(--text2);border:1px solid var(--border);}
+.wf-btn.success{background:var(--success);color:#fff;}
+
+/* Progress */
+.progress{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px;}
+.progress-fill{height:100%;border-radius:3px;}
+
+/* Tabs */
+.wf-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.wf-tab{padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;}
+.wf-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:500;}
+
+/* Status timeline */
+.timeline{position:relative;padding-left:24px;}
+.timeline::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--border);}
+.tl-item{position:relative;margin-bottom:20px;}
+.tl-dot{position:absolute;left:-20px;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:#fff;}
+.tl-dot.done{background:var(--success);border-color:var(--success);}
+.tl-dot.active{background:var(--primary);border-color:var(--primary);}
+.tl-dot.todo{background:var(--warning);border-color:var(--warning);}
+.tl-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.tl-desc{font-size:12px;color:var(--text3);line-height:1.6;}
+
+/* Annotation */
+.annotation{background:#fffbe6;border:1px solid #ffe58f;border-radius:6px;padding:10px 14px;font-size:12px;color:#874d00;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;}
+
+/* divider */
+.divider{height:1px;background:var(--border);margin:24px 0;}
+
+/* ── Dark Mode ── */
+body.dark{
+  --primary:#4096ff;--primary-light:#111d2c;--primary-dark:#1677ff;
+  --text:#e6eaf0;--text2:#a9b0be;--text3:#636c7e;
+  --border:#2a2f3a;--bg:#141720;--bg2:#1a1f2e;--white:#1e2332;
+  --done-bg:#162312;--done-border:#274916;--done-text:#73d13d;
+  --todo-bg:#2b1d11;--todo-border:#593815;--todo-text:#ffa940;
+}
+body.dark .wireframe{border-color:#2a4a7f;background:#141c2e;}
+body.dark .wireframe-bar{background:linear-gradient(135deg,#0c3566,#1a2d5a);}
+body.dark .wf-card{background:#1e2332;border-color:#2a2f3a;}
+body.dark .wf-input,body.dark .wf-select{background:#141720;border-color:#2a2f3a;color:var(--text2);}
+body.dark .wf-btn.default{background:#1e2332;border-color:#2a2f3a;color:var(--text2);}
+body.dark .wf-table{background:#1e2332;}
+body.dark .wf-table th{background:#141720;}
+body.dark .chart-box{background:#1e2332;}
+body.dark .mini-stat{background:#141720;}
+body.dark .screenshot-wrap{border-color:#2a2f3a;box-shadow:0 2px 16px rgba(0,0,0,.4);}
+body.dark .screenshot-caption{background:#141720;border-color:#2a2f3a;}
+body.dark .feature-item{background:#1e2332;border-color:#2a2f3a;}
+body.dark .annotation{background:#2b1d11;border-color:#593815;color:#ffa940;}
+body.dark .section-desc{background:#1a1f2e;}
+body.dark .section-header{border-color:#2a2f3a;}
+body.dark .timeline::before{background:#2a2f3a;}
+body.dark .tl-dot{background:#1e2332;border-color:#2a2f3a;}
+
+/* ── Optimization Hint ── */
+.opt-hint{background:#f0f5ff;border:1px solid #adc6ff;border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start;}
+.opt-hint-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.opt-hint-body{flex:1;}
+.opt-hint-title{font-size:12px;font-weight:700;color:#1d39c4;margin-bottom:5px;}
+.opt-hint ul{margin:0;padding-left:16px;font-size:12px;color:#2f54eb;line-height:1.8;}
+body.dark .opt-hint{background:#111d2c;border-color:#1d3461;}
+body.dark .opt-hint-title{color:#69b1ff;}
+body.dark .opt-hint ul{color:#4096ff;}
+
+/* ── Dark Mode Toggle ── */
+.dark-toggle{width:36px;height:20px;border-radius:10px;border:none;cursor:pointer;position:relative;background:#d0d7e3;transition:background .25s;flex-shrink:0;}
+.dark-toggle.on{background:var(--primary);}
+.dark-toggle::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .25s;}
+.dark-toggle.on::after{left:19px;}
+
+/* ── Filter Chips ── */
+.filter-bar{display:flex;align-items:center;gap:6px;}
+.filter-chip{height:26px;padding:0 12px;border-radius:13px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--white);color:var(--text2);transition:all .15s;}
+.filter-chip:hover{border-color:var(--primary);color:var(--primary);}
+.filter-chip.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.section[data-cat].hidden{display:none;}
+
+/* ── Hamburger ── */
+.ham-btn{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;border:none;background:none;z-index:201;flex-shrink:0;}
+.ham-btn span{display:block;width:20px;height:2px;background:var(--text);border-radius:2px;transition:all .25s;}
+.ham-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.ham-btn.open span:nth-child(2){opacity:0;}
+.ham-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+/* ── Overlay ── */
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99;}
+#sidebar-overlay.show{display:block;}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  :root{--topbar:50px;}
+  .ham-btn{display:flex;}
+
+  .sidebar{transform:translateX(-100%);transition:transform .28s ease;z-index:100;}
+  .sidebar.open{transform:translateX(0);}
+
+  .content{margin-left:0 !important;padding:14px 12px;}
+
+  /* Topbar */
+  .topbar{padding:0 10px;gap:6px;flex-wrap:nowrap;}
+  .topbar-meta{display:none;}
+  .filter-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px;gap:4px;}
+  .filter-bar span{display:none;}
+  .filter-chip{white-space:nowrap;font-size:11px;padding:0 8px;height:24px;}
+
+  /* Main content */
+  .section{padding:16px 14px;}
+  .section-header h2{font-size:16px;}
+
+  /* Grids → single column */
+  .wf-grid,
+  div[style*="display:grid"],
+  div[style*="grid-template-columns"]{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:10px !important;
+  }
+
+  /* Screenshots */
+  .screenshot img{max-width:100%;height:auto;}
+
+  /* Tables */
+  table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;}
+
+  /* Wireframes */
+  .wf-box{overflow-x:auto;}
+  .wf-row{flex-wrap:wrap;}
+
+  /* Hint boxes */
+  .hint-box{margin:12px 0;}
+}
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:#1d2129;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;"></div>
+
+<!-- ══ TOPBAR ══ -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+<div class="topbar">
+  <button class="ham-btn" id="hamBtn" onclick="toggleSidebar()" aria-label="菜单">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="topbar-logo">
+    <div class="logo-box"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 3h2v4h-2zm4-4h2v2h-2zm-4 0h2v2h-2zm4 4h2v2h-2z" fill="white"/></svg></div>
+    OpenQuant 产品设计规范
+  </div>
+  <div class="filter-bar" style="margin-left:24px;">
+    <span style="font-size:12px;color:var(--text3);margin-right:2px;">筛选：</span>
+    <button class="filter-chip active" onclick="filterSections('all',this)">全部</button>
+    <button class="filter-chip" onclick="filterSections('done',this)">✅ 已完成</button>
+    <button class="filter-chip" onclick="filterSections('todo',this)">🚧 待开发</button>
+    <button class="filter-chip" onclick="filterSections('ops',this)">📣 运营功能</button>
+  </div>
+  <div class="topbar-meta">
+    <span class="ver-tag">v2.0</span>
+    <span><span class="status-dot"></span> MVP 已上线</span>
+    <span>更新于 2026-02-25</span>
+    <span style="display:flex;align-items:center;gap:6px;">🌙 <button class="dark-toggle" id="darkBtn" onclick="toggleDark()"></button></span>
+  </div>
+</div>
+
+<!-- ══ SIDEBAR ══ -->
+<div class="sidebar">
+  <div class="sidebar-group-title">概览</div>
+  <a class="nav-item" onclick="goTo('overview', this)" data-target="overview">📋 产品概述与架构</a>
+  <a class="nav-item" onclick="goTo('roadmap', this)" data-target="roadmap">🗺️ 产品路线图</a>
+
+  <div class="sidebar-group-title" style="margin-top:12px;">✅ 已完成功能</div>
+  <a class="nav-item" onclick="goTo('s-landing', this)" data-target="s-landing"><span class="nav-dot done"></span>首页</a>
+  <a class="nav-item" onclick="goTo('s-dashboard', this)" data-target="s-dashboard"><span class="nav-dot done"></span>控制台</a>
+  <a class="nav-item" onclick="goTo('s-live', this)" data-target="s-live"><span class="nav-dot done"></span>实盘管理</a>
+  <a class="nav-item" onclick="goTo('s-strategy', this)" data-target="s-strategy"><span class="nav-dot done"></span>策略库</a>
+  <a class="nav-item" onclick="goTo('s-editor', this)" data-target="s-editor"><span class="nav-dot done"></span>代码编辑器</a>
+  <a class="nav-item" onclick="goTo('s-host', this)" data-target="s-host"><span class="nav-dot done"></span>托管者</a>
+  <a class="nav-item" onclick="goTo('s-exchange', this)" data-target="s-exchange"><span class="nav-dot done"></span>交易所管理</a>
+  <a class="nav-item" onclick="goTo('s-rental', this)" data-target="s-rental"><span class="nav-dot done"></span>租赁管理</a>
+  <a class="nav-item" onclick="goTo('s-share', this)" data-target="s-share"><span class="nav-dot done"></span>分享管理</a>
+  <a class="nav-item" onclick="goTo('s-order', this)" data-target="s-order"><span class="nav-dot done"></span>订单管理</a>
+  <a class="nav-item" onclick="goTo('s-account', this)" data-target="s-account"><span class="nav-dot done"></span>账号设置</a>
+  <a class="nav-item" onclick="goTo('s-observe', this)" data-target="s-observe"><span class="nav-dot done"></span>围观</a>
+  <a class="nav-item" onclick="goTo('s-community', this)" data-target="s-community"><span class="nav-dot done"></span>社区</a>
+  <a class="nav-item" onclick="goTo('s-market', this)" data-target="s-market"><span class="nav-dot done"></span>策略租赁市场</a>
+
+  <div class="sidebar-group-title" style="margin-top:12px;">🚧 待开发功能</div>
+  <a class="nav-item" onclick="goTo('t-market', this)" data-target="t-market"><span class="nav-dot todo"></span>数据监控（可选）</a>
+  <a class="nav-item" onclick="goTo('t-notify', this)" data-target="t-notify"><span class="nav-dot todo"></span>通知系统</a>
+  <a class="nav-item" onclick="goTo('t-perm', this)" data-target="t-perm"><span class="nav-dot todo"></span>权限矩阵</a>
+  <a class="nav-item" onclick="goTo('t-backtest', this)" data-target="t-backtest"><span class="nav-dot todo"></span>回测系统</a>
+  <a class="nav-item" onclick="goTo('t-monitor', this)" data-target="t-monitor"><span class="nav-dot todo"></span>实盘监控详情</a>
+  <a class="nav-item" onclick="goTo('t-perf', this)" data-target="t-perf"><span class="nav-dot todo"></span>绩效分析</a>
+  <a class="nav-item" onclick="goTo('t-asset', this)" data-target="t-asset"><span class="nav-dot todo"></span>资产统计</a>
+  <a class="nav-item" onclick="goTo('t-version', this)" data-target="t-version"><span class="nav-dot todo"></span>版本控制</a>
+  <a class="nav-item" onclick="goTo('t-member', this)" data-target="t-member"><span class="nav-dot todo"></span>会员体系</a>
+
+  <div class="sidebar-group-title" style="margin-top:12px;">📣 运营增长功能</div>
+  <a class="nav-item" onclick="goTo('o-task', this)" data-target="o-task"><span class="nav-dot" style="background:#eb2f96;"></span>服务器续费任务</a>
+  <a class="nav-item" onclick="goTo('o-exchange', this)" data-target="o-exchange"><span class="nav-dot" style="background:#eb2f96;"></span>竞品会员置换</a>
+  <a class="nav-item" onclick="goTo('o-factor', this)" data-target="o-factor"><span class="nav-dot" style="background:#eb2f96;"></span>因子广场</a>
+  <a class="nav-item" onclick="goTo('o-agent', this)" data-target="o-agent"><span class="nav-dot" style="background:#eb2f96;"></span>代理推广中心</a>
+  <a class="nav-item" onclick="goTo('o-camp', this)" data-target="o-camp"><span class="nav-dot" style="background:#eb2f96;"></span>21天实战营</a>
+</div>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="content">
+
+  <!-- ─── 产品概述 ─── -->
+  <div class="section" data-cat="overview" id="overview">
+    <div class="section-header">
+      <h2>产品概述与架构</h2>
+    </div>
+    <div class="section-desc">
+      <b>OpenQuant</b> 是面向量化交易者的高频交易 SaaS 平台，提供从策略开发、回测验证、实盘部署、托管运行到策略共享租赁的全链路一站式服务。核心引擎采用 Rust 构建，系统延迟 &lt;10μs，支持 Binance / OKX / Gate / Bybit 等主流交易所，兼容 Python / Rust 双语言策略。
+    </div>
+    <div class="feature-grid">
+      <div class="feature-item"><h4>🎯 面向策略开发者</h4><p>策略上传 → 代码编辑 → 回测验证 → 实盘部署 → 租赁变现，全链路闭环</p></div>
+      <div class="feature-item"><h4>👥 面向普通交易者</h4><p>围观优质实盘 → 租用经验证策略 → 一键运行，低门槛参与量化</p></div>
+      <div class="feature-item"><h4>🖥️ 面向托管服务提供者</h4><p>部署托管者节点，为平台用户提供服务器资源</p></div>
+      <div class="feature-item"><h4>🌐 社区生态</h4><p>论坛、围观、排行榜构成社区飞轮，持续吸引量化交易者</p></div>
+    </div>
+  </div>
+
+  <!-- ─── 路线图 ─── -->
+  <div class="section" data-cat="overview" id="roadmap">
+    <div class="section-header">
+      <h2>产品路线图</h2>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot done"></div>
+        <div class="tl-title">Phase 1 · 现阶段 <span class="badge badge-done">✅ 已完成</span></div>
+        <div class="tl-desc">首页、控制台、在线代码编辑器、策略库、托管者、实盘管理、交易所管理、租赁/分享/订单管理、围观、社区、策略租赁市场、<b>API 开放平台</b>、<b>Telegram Bot 深度集成</b></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot active"></div>
+        <div class="tl-title">Phase 2 · 核心体验完善 <span class="badge badge-todo">🚧 进行中</span></div>
+        <div class="tl-desc">回测系统、实盘监控强化（实时收益曲线 + 风控状态）、绩效分析、资产统计</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot todo"></div>
+        <div class="tl-title">Phase 3 · 商业化与生态成熟 <span class="badge badge-mid">📅 规划中</span></div>
+        <div class="tl-desc">策略市场丰富化、版本控制、会员体系定价落地</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot todo"></div>
+        <div class="tl-title">Phase 4 · 长期愿景 <span class="badge badge-mid">🔮 远期</span></div>
+        <div class="tl-desc">链上交易支持、AI 辅助策略、机构私有化部署、策略众筹资金池、移动端 App</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2 style="font-size:16px;font-weight:700;color:var(--done-text);margin-bottom:24px;display:flex;align-items:center;gap:8px;">
+    <span style="background:var(--done-bg);border:1px solid var(--done-border);padding:4px 12px;border-radius:20px;">✅ 已完成功能</span>
+  </h2>
+
+  <!-- ─── 首页 ─── -->
+  <div class="section" data-cat="done" id="s-landing">
+    <div class="section-header">
+      <h2>首页</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">面向未登录用户的产品宣传页，传达核心价值主张（Rust底层 / &lt;10μs / 兼容生态），通过"观看实盘"和"立即洽谈"两个 CTA 按钮引导注册转化。</div>
+    <div class="screenshot-wrap">
+      <img src="img/homepage.png" alt="首页截图">
+      <div class="screenshot-caption">首页 · 核心区展示产品核心卖点，背景为实时行情数字矩阵</div>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-item"><h4>核心区</h4><p>产品名称 + 三大卖点 + 双 CTA 按钮（观看实盘 / 立即洽谈）</p></div>
+      <div class="feature-item"><h4>行情背景</h4><p>实时行情数字矩阵背景，底部柱状图，强化高频交易氛围</p></div>
+    </div>
+    <div class="opt-hint">
+      <div class="opt-hint-icon">⚡</div>
+      <div class="opt-hint-body">
+        <div class="opt-hint-title">优化建议</div>
+        <ul>
+          <li>增加"<b>竞品会员置换</b>"显眼入口按钮（对应运营计划 2.2），降低竞品用户迁移成本</li>
+          <li>增加<b>社会证明</b>数据区块：平台策略数 / 活跃用户数 / 累计交易额，增强信任感</li>
+         </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 控制台 ─── -->
+  <div class="section" data-cat="done" id="s-dashboard">
+    <div class="section-header">
+      <h2>控制台</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">用户登录后的核心枢纽页面。包含数据概览（实盘数/策略数/交易所/托管者）、10 个快速入口、历史搜索，以及右侧用户信息面板和消息通知列表。</div>
+    <div class="screenshot-wrap">
+      <img src="img/dashboard.png" alt="控制台截图">
+      <div class="screenshot-caption">控制台 · 数据概览 + 快速入口 + 右侧用户面板与消息列表</div>
+    </div>
+    <div class="opt-hint">
+      <div class="opt-hint-icon">⚡</div>
+      <div class="opt-hint-body">
+        <div class="opt-hint-title">优化建议</div>
+        <ul>
+          <li>数据概览卡片增加<b>总资产（折合 USDT）</b>和<b>今日盈亏</b>两个财务指标</li>
+          <li>快速入口增加"<b>行情监控</b>"入口（实时 K 线、深度图）</li>
+          <li>右侧面板增加<b>任务续期进度条</b>（剩余服务器天数，视觉化提醒续期）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 实盘管理 ─── -->
+  <div class="section" data-cat="done" id="s-live">
+    <div class="section-header">
+      <h2>实盘管理</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">统一管理所有交易实盘的生命周期。提供实盘总数/运行中/已停止三项统计，支持关键词+状态筛选，批量启动/停止/重启/删除，以及财务汇总（总余额、总利润等）。</div>
+    <div class="screenshot-wrap">
+      <img src="img/live.png" alt="实盘管理截图">
+      <div class="screenshot-caption">实盘管理 · 统计卡片 + 筛选条件 + 批量操作工具栏</div>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-item"><h4>状态管理</h4><p>支持 运行中 / 暂停 / 已停止 / 异常 四种状态，异常时自动重启（最多3次）</p></div>
+      <div class="feature-item"><h4>财务汇总</h4><p>列表上方展示总余额、总利润、当日余额变化、当日利润变化聚合数据</p></div>
+    </div>
+    <div class="opt-hint">
+      <div class="opt-hint-icon">⚡</div>
+      <div class="opt-hint-body">
+        <div class="opt-hint-title">优化建议</div>
+        <ul>
+          <li>列表行<b>可点击</b>进入"实盘监控详情页"（待开发），查看实时收益曲线 + 持仓 + 风控</li>
+          <li>增加<b>实盘模板</b>功能：保存常用配置（交易所 + 策略组合），快速创建新实盘</li>
+          <li>批量操作时增加<b>操作日志预览</b>（显示将要影响的实盘列表确认弹窗）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 策略库 ─── -->
+  <div class="section" data-cat="done" id="s-strategy">
+    <div class="section-header">
+      <h2>策略库（私有）</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">管理用户上传的私有量化策略文件，支持出租（上架租赁市场）、分享（生成链接或发布围观广场）、编辑和删除。私有策略与已发布租赁策略通过 Tab 切换。</div>
+    <div class="screenshot-wrap">
+      <img src="img/strategy.png" alt="策略库截图">
+      <div class="screenshot-caption">策略库 · 展示策略文件大小、版本、运行实盘数等关键信息</div>
+    </div>
+  </div>
+
+  <!-- ─── 代码编辑器 ─── -->
+  <div class="section" data-cat="done" id="s-editor">
+    <div class="section-header">
+      <h2>在线代码编辑器</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">专业的在线代码编辑器，支持 Python / Rust 策略开发。具备语法高亮、实时错误检查、多标签页编辑，以及与 VS Code 插件的联动支持。</div>
+    <div class="feature-grid">
+      <div class="feature-item"><h4>智能补全</h4><p>支持 Python 内置函数、OpenQuant API（context. / data.）、pandas / numpy 方法自动补全</p></div>
+      <div class="feature-item"><h4>实时错误检查</h4><p>语法错误（红色波浪线）、未定义变量、缩进错误等实时提示，底部状态栏显示错误数量</p></div>
+      <div class="feature-item"><h4>多标签页</h4><p>同时打开多个策略文件（免费版最多3个，VIP 无限），未保存时显示 * 标记</p></div>
+      <div class="feature-item"><h4>搜索替换</h4><p>Ctrl+F 搜索（支持正则）、Ctrl+H 替换、Ctrl+Shift+F 跨文件搜索</p></div>
+    </div>
+    <div class="opt-hint">
+      <div class="opt-hint-icon">⚡</div>
+      <div class="opt-hint-body">
+        <div class="opt-hint-title">优化建议</div>
+        <ul>
+          <li><b>策略模板库</b>：内置"双均线 / 网格 / RSI 反转"等常用策略模板，一键加载到编辑器，降低上手门槛（尤其适合实战营学员）</li>
+          <li><b>右侧文档面板</b>：编辑器侧边栏展示 OpenQuant API 文档，避免切出编辑器查文档</li>
+          <li><b>代码一键回测</b>：编辑器顶部增加"▶ 快速回测"按钮，无需离开页面即可触发回测任务</li>
+          <li>长期规划：接入 <b>AI 代码助手</b>（类 GitHub Copilot），输入注释自动生成策略代码片段</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 托管者 ─── -->
+  <div class="section" data-cat="done" id="s-host">
+    <div class="section-header">
+      <h2>托管者</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">管理运行实盘的服务器节点</div>
+    <div class="screenshot-wrap">
+      <img src="img/host.png" alt="托管者截图">
+      <div class="screenshot-caption">托管者 · 服务器卡片展示资源使用进度条，回报时间及状态标签</div>
+    </div>
+  </div>
+
+  <!-- ─── 交易所管理 ─── -->
+  <div class="section" data-cat="done" id="s-exchange">
+    <div class="section-header">
+      <h2>交易所管理</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">统一管理各交易所 API 凭证。支持 Binance / OKX / Gate / Bybit 等主流交易所，Spot 和 Swap 产品类型。API Key 部分展示，绑定时自动进行权限检查（含提现权限的密钥进行提醒）。</div>
+    <div class="screenshot-wrap">
+      <img src="img/exchange.png" alt="交易所管理截图">
+      <div class="screenshot-caption">交易所管理 · API凭证列表，支持多个交易所多账户管理</div>
+    </div>
+  </div>
+
+  <!-- ─── 租赁管理 ─── -->
+  <div class="section" data-cat="done" id="s-rental">
+    <div class="section-header">
+      <h2>租赁管理</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">策略开发者发布和管理可租赁策略的页面。设置租赁策略名称、定价类型（按天/月/年）和周期。平台抽成 30%，开发者得 70%，每月 15 日自动结算。</div>
+    <div class="screenshot-wrap">
+      <img src="img/rental.png" alt="租赁管理截图">
+      <div class="screenshot-caption">租赁管理 · 展示租赁策略编号、密钥、绑定私有策略与定价信息</div>
+    </div>
+  </div>
+
+  <!-- ─── 分享管理 ─── -->
+  <div class="section" data-cat="done" id="s-share">
+    <div class="section-header">
+      <h2>分享管理</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">统一管理用户对外分享的实盘、策略、交易所记录。支持两种访问权限：匿名访问（任何人通过链接访问）和公开访问（上架围观广场，全平台可见）。</div>
+    <div class="screenshot-wrap">
+      <img src="img/share.png" alt="分享管理截图">
+      <div class="screenshot-caption">分享管理 · 记录分享编号、标题、访问量、主体类型等信息</div>
+    </div>
+  </div>
+
+  <!-- ─── 订单管理 ─── -->
+  <div class="section" data-cat="done" id="s-order">
+    <div class="section-header">
+      <h2>订单管理</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">记录用户在平台产生的所有消费订单（主要为策略租赁费用）。展示订单金额、状态、资源定价类型、订阅周期等完整信息，支持按订单号、状态、资源类型筛选。</div>
+    <div class="screenshot-wrap">
+      <img src="img/order.png" alt="订单管理截图">
+      <div class="screenshot-caption">订单管理 · 多字段筛选 + 完整订单信息表格</div>
+    </div>
+  </div>
+
+  <!-- ─── 账号设置 ─── -->
+  <div class="section" data-cat="done" id="s-account">
+    <div class="section-header">
+      <h2>账号设置</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">三 Tab 结构：账户信息（个人资料、会员信息、通知设置）、API 接口管理（平台开放 API 密钥管理）、账户安全（密码修改、登录设备管理、2FA）。</div>
+    <div class="screenshot-wrap">
+      <img src="img/account.png" alt="账号设置截图">
+      <div class="screenshot-caption">账号设置 · 个人信息、会员状态、联系方式、安全设置</div>
+    </div>
+  </div>
+
+  <!-- ─── 围观 ─── -->
+  <div class="section" data-cat="done" id="s-observe">
+    <div class="section-header">
+      <h2>围观（公开实盘）</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">向所有用户（含游客）公开展示平台上优质运行实盘。卡片式网格布局（3列），展示收益曲线、累计收益、收益率、账户余额，官方认证标签提升信任度。支持按交易所筛选和综合/最新/最热/收益最高排序。</div>
+    <div class="screenshot-wrap">
+      <img src="img/observe.png" alt="围观截图">
+      <div class="screenshot-caption">围观 · 实时追踪策略运行动态，官方认证实盘卡片展示</div>
+    </div>
+    <div class="opt-hint">
+      <div class="opt-hint-icon">⚡</div>
+      <div class="opt-hint-body">
+        <div class="opt-hint-title">优化建议</div>
+        <ul>
+         <li>卡片增加<b>迷你收益曲线</b>（7 日迷你折线），让用户在不点击详情的情况下快速感知策略稳定性</li>
+          <li>增加<b>对比视图</b>：同时选中 2-4 个策略进行收益 / 回撤 / 胜率横向对比</li>
+          <li>与"策略租赁市场"打通：围观页直接展示该策略<b>是否可租</b>，以及当前租金</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 社区 ─── -->
+  <div class="section" data-cat="done" id="s-community">
+    <div class="section-header">
+      <h2>社区论坛</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">量化交易者知识与经验分享社区。8个板块分类（源码解析、经验交流、策略分享、知识库等），支持帖子发布（富文本 + 代码块 + 图片 + 回测报告插入），最新/最热排序，用户等级体系（Lv.0～Lv.5）。</div>
+    <div class="screenshot-wrap">
+      <img src="img/community.png" alt="社区截图">
+      <div class="screenshot-caption">社区 · 量化交易者聚集地，分享策略、探讨技术、结识同好</div>
+    </div>
+    <div class="opt-hint">
+      <div class="opt-hint-icon">⚡</div>
+      <div class="opt-hint-body">
+        <div class="opt-hint-title">优化建议</div>
+        <ul>
+          <li>帖子编辑器增加<b>"插入回测报告"</b>组件：一键嵌入图表卡片，让分享更直观可信</li>
+          <li>增加"<b>因子广场</b>"板块入口（对应运营计划 2.3），形成社区内的因子提交流量</li>
+          <li>用户主页增加<b>策略展示</b>区块（已发布策略（围观） / 已上架租赁（租赁）），形成个人量化名片</li>
+          <li>为<b>21天实战营学员</b>设置专属身份标识，鼓励在社区分享学习成果（互相背书）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 策略租赁市场 ─── -->
+  <div class="section" data-cat="done" id="s-market">
+    <div class="section-header">
+      <h2>策略租赁市场</h2>
+      <span class="badge badge-done">✅ 已上线</span>
+    </div>
+    <div class="section-desc">策略的公开商城，连接策略开发者（卖方）与普通交易者（买方）。支持按语言（Python/Rust）、类别（加密货币/模版/插件）和技术指标（ATR/EMA/MA/RSI/SMA）双级筛选，以及关键词搜索。</div>
+    <div class="screenshot-wrap">
+      <img src="img/market.png" alt="策略租赁市场截图">
+      <div class="screenshot-caption">策略租赁市场 · 双级分类筛选，支持按技术指标快速定位策略</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <div class="divider"></div>
+  <h2 style="font-size:16px;font-weight:700;color:var(--todo-text);margin-bottom:24px;display:flex;align-items:center;gap:8px;">
+    <span style="background:var(--todo-bg);border:1px solid var(--todo-border);padding:4px 12px;border-radius:20px;">🚧 待开发功能</span>
+  </h2>
+
+  <!-- ─── 数据监控 ─── -->
+  <div class="section" data-cat="todo" id="t-market">
+    <div class="section-header">
+      <h2>数据监控（行情中心-可选）</h2>
+      <span class="badge badge-todo">🚧 待开发</span>
+    </div>
+    <div class="annotation">💡 <span>实时行情监控中心，TradingView 风格 K 线图 + 深度图 + 最新成交，支持自选列表和多周期切换。为实盘用户提供市场感知能力。</span></div>
+    <div class="section-desc">用户无需离开平台即可查看交易对的实时 K 线、成交深度和 24h 统计数据，同时支持添加自选列表，快速对比多个交易对的行情状态。</div>
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">数据监控 · BTC/USDT</span>
+        <span style="background:rgba(255,255,255,.15);padding:2px 8px;border-radius:4px;">Binance · 现货</span>
+      </div>
+      <div class="wf-body">
+        <div style="display:flex;gap:12px;">
+          <!-- 左：自选列表 -->
+          <div style="width:180px;flex-shrink:0;">
+            <div style="display:flex;gap:4px;margin-bottom:10px;">
+              <div class="wf-input" style="flex:1;font-size:11px;">🔍 搜索</div>
+            </div>
+            <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px 8px;">自选列表</div>
+            <div style="background:var(--primary-light);border-left:3px solid var(--primary);padding:8px;border-radius:4px;margin-bottom:2px;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="font-weight:600;">BTC/USDT</span><span style="color:var(--success);">+2.4%</span></div>
+              <div style="font-size:11px;color:var(--text3);">$51,234.50</div>
+            </div>
+            <div style="padding:8px;margin-bottom:2px;cursor:pointer;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;"><span>ETH/USDT</span><span style="color:var(--danger);">-0.8%</span></div>
+              <div style="font-size:11px;color:var(--text3);">$2,834.20</div>
+            </div>
+            <div style="padding:8px;margin-bottom:2px;cursor:pointer;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;"><span>SOL/USDT</span><span style="color:var(--success);">+5.1%</span></div>
+              <div style="font-size:11px;color:var(--text3);">$142.30</div>
+            </div>
+            <div style="padding:8px;cursor:pointer;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;"><span>BNB/USDT</span><span style="color:var(--success);">+1.2%</span></div>
+              <div style="font-size:11px;color:var(--text3);">$398.60</div>
+            </div>
+            <button class="wf-btn default" style="width:100%;margin-top:8px;height:28px;font-size:11px;justify-content:center;">+ 添加自选</button>
+          </div>
+          <!-- 右：K线 + 深度 -->
+          <div style="flex:1;min-width:0;">
+            <!-- 价格概览 -->
+            <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px;">
+              <span style="font-size:24px;font-weight:800;color:var(--success);">$51,234.50</span>
+              <span style="font-size:14px;color:var(--success);">+$1,212.80 (+2.42%)</span>
+              <div style="margin-left:auto;display:flex;gap:4px;">
+                <button class="wf-btn default" style="height:26px;font-size:11px;">1m</button>
+                <button class="wf-btn default" style="height:26px;font-size:11px;">15m</button>
+                <button class="wf-btn primary" style="height:26px;font-size:11px;">1H</button>
+                <button class="wf-btn default" style="height:26px;font-size:11px;">4H</button>
+                <button class="wf-btn default" style="height:26px;font-size:11px;">1D</button>
+              </div>
+            </div>
+            <!-- K线图占位 -->
+            <div style="background:#1e1e1e;border-radius:8px;height:180px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;overflow:hidden;">
+              <svg width="100%" height="100%" viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;">
+                <!-- Grid lines -->
+                <line x1="0" y1="45" x2="600" y2="45" stroke="#333" stroke-width="0.5"/>
+                <line x1="0" y1="90" x2="600" y2="90" stroke="#333" stroke-width="0.5"/>
+                <line x1="0" y1="135" x2="600" y2="135" stroke="#333" stroke-width="0.5"/>
+                <!-- Candles (simplified) -->
+                <rect x="20" y="80" width="16" height="40" fill="#52c41a" rx="1"/>
+                <line x1="28" y1="70" x2="28" y2="130" stroke="#52c41a" stroke-width="1.5"/>
+                <rect x="50" y="65" width="16" height="55" fill="#52c41a" rx="1"/>
+                <line x1="58" y1="55" x2="58" y2="135" stroke="#52c41a" stroke-width="1.5"/>
+                <rect x="80" y="75" width="16" height="30" fill="#ff4d4f" rx="1"/>
+                <line x1="88" y1="65" x2="88" y2="115" stroke="#ff4d4f" stroke-width="1.5"/>
+                <rect x="110" y="55" width="16" height="50" fill="#52c41a" rx="1"/>
+                <line x1="118" y1="45" x2="118" y2="120" stroke="#52c41a" stroke-width="1.5"/>
+                <rect x="140" y="45" width="16" height="45" fill="#52c41a" rx="1"/>
+                <line x1="148" y1="35" x2="148" y2="110" stroke="#52c41a" stroke-width="1.5"/>
+                <rect x="170" y="60" width="16" height="35" fill="#ff4d4f" rx="1"/>
+                <line x1="178" y1="50" x2="178" y2="105" stroke="#ff4d4f" stroke-width="1.5"/>
+                <rect x="200" y="40" width="16" height="55" fill="#52c41a" rx="1"/>
+                <line x1="208" y1="30" x2="208" y2="110" stroke="#52c41a" stroke-width="1.5"/>
+                <rect x="230" y="30" width="16" height="40" fill="#52c41a" rx="1"/>
+                <line x1="238" y1="22" x2="238" y2="80" stroke="#52c41a" stroke-width="1.5"/>
+                <rect x="260" y="45" width="16" height="30" fill="#ff4d4f" rx="1"/>
+                <line x1="268" y1="38" x2="268" y2="88" stroke="#ff4d4f" stroke-width="1.5"/>
+                <rect x="290" y="25" width="16" height="45" fill="#52c41a" rx="1"/>
+                <line x1="298" y1="18" x2="298" y2="85" stroke="#52c41a" stroke-width="1.5"/>
+                <text x="8" y="42" font-size="10" fill="#666">$52k</text>
+                <text x="8" y="88" font-size="10" fill="#666">$51k</text>
+                <text x="8" y="133" font-size="10" fill="#666">$50k</text>
+              </svg>
+              <span style="color:#555;font-size:12px;z-index:1;background:rgba(30,30,30,.8);padding:4px 8px;border-radius:4px;">TradingView 嵌入组件</span>
+            </div>
+            <!-- 24h 统计 + 深度 -->
+            <div class="wf-row" style="margin-bottom:0;">
+              <div class="wf-card flex1">
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:12px;">
+                  <div><div class="wf-label">24H 最高</div><div style="font-weight:600;color:var(--success);">$52,100</div></div>
+                  <div><div class="wf-label">24H 最低</div><div style="font-weight:600;color:var(--danger);">$49,800</div></div>
+                  <div><div class="wf-label">24H 成交量</div><div style="font-weight:600;">28,420 BTC</div></div>
+                  <div><div class="wf-label">24H 成交额</div><div style="font-weight:600;">$1.42B</div></div>
+                </div>
+              </div>
+              <div class="wf-card" style="width:160px;flex-shrink:0;">
+                <div style="font-size:12px;font-weight:600;margin-bottom:6px;">买卖深度</div>
+                <div style="display:flex;height:40px;gap:2px;align-items:flex-end;">
+                  <div style="background:#52c41a;flex:0.6;opacity:.8;border-radius:2px 2px 0 0;"></div>
+                  <div style="background:#52c41a;flex:0.8;opacity:.7;border-radius:2px 2px 0 0;"></div>
+                  <div style="background:#52c41a;flex:1;border-radius:2px 2px 0 0;"></div>
+                  <div style="width:2px;background:var(--text3);"></div>
+                  <div style="background:#ff4d4f;flex:0.9;border-radius:2px 2px 0 0;"></div>
+                  <div style="background:#ff4d4f;flex:0.7;opacity:.7;border-radius:2px 2px 0 0;"></div>
+                  <div style="background:#ff4d4f;flex:0.5;opacity:.8;border-radius:2px 2px 0 0;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;"><span style="color:var(--success);">买 54.2%</span><span style="color:var(--danger);">卖 45.8%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 通知系统 ─── -->
+  <div class="section" data-cat="todo" id="t-notify">
+    <div class="section-header">
+      <h2>通知系统（优化）</h2>
+      <span class="badge badge-todo">🚧 待开发</span>
+    </div>
+    <div class="annotation">💡 <span>多渠道通知推送系统（站内信 / Email / Telegram Bot），覆盖实盘异常、止损触发、托管者离线、服务器到期等关键事件，支持用户自定义规则。</span></div>
+    <div class="section-desc">通知中心采用"触发规则 + 推送渠道"两维配置模式，用户可以针对每类事件单独设置推送方式，避免信息过载。顶栏铃铛图标实时显示未读数量。</div>
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">通知中心</span>
+        <span style="background:rgba(255,77,79,.7);padding:2px 8px;border-radius:8px;font-size:11px;">3 条未读</span>
+      </div>
+      <div class="wf-body">
+        <div style="display:flex;gap:16px;">
+          <!-- 通知列表 -->
+          <div style="flex:1;">
+            <div class="wf-tabs">
+              <div class="wf-tab active">全部 (8)</div>
+              <div class="wf-tab">未读 (3)</div>
+              <div class="wf-tab">实盘</div>
+              <div class="wf-tab">系统</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <!-- 未读 - 严重 -->
+              <div style="background:#fff2f0;border:1px solid #ffccc7;border-left:4px solid var(--danger);border-radius:6px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;">
+                <span style="font-size:16px;flex-shrink:0;">🚨</span>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;color:var(--danger);">实盘异常 · 双均线策略 v1.5</div>
+                  <div style="font-size:12px;color:var(--text2);margin-top:3px;">策略已触发最大回撤止损（-10%），实盘已自动停止运行</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:4px;">2025-02-24 14:32 · Binance</div>
+                </div>
+                <button class="wf-btn default" style="height:26px;font-size:11px;flex-shrink:0;">查看详情</button>
+              </div>
+              <!-- 未读 - 警告 -->
+              <div style="background:#fff7e6;border:1px solid #ffd591;border-left:4px solid var(--warning);border-radius:6px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;">
+                <span style="font-size:16px;flex-shrink:0;">⚠️</span>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;color:#d46b08;">托管者离线 · Server-HK-01</div>
+                  <div style="font-size:12px;color:var(--text2);margin-top:3px;">心跳超时 5 分钟，运行在该节点的 3 个实盘可能受影响</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:4px;">2025-02-24 10:15</div>
+                </div>
+                <button class="wf-btn default" style="height:26px;font-size:11px;flex-shrink:0;">查看托管者</button>
+              </div>
+              <!-- 未读 - 信息 -->
+              <div style="background:var(--primary-light);border:1px solid #91caff;border-left:4px solid var(--primary);border-radius:6px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;">
+                <span style="font-size:16px;flex-shrink:0;">💰</span>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;color:var(--primary);">租赁收益结算</div>
+                  <div style="font-size:12px;color:var(--text2);margin-top:3px;">本月策略租赁收益 $128.50 已结算至账户余额</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:4px;">2025-02-15 09:00 · 每月15日自动结算</div>
+                </div>
+              </div>
+              <!-- 已读 -->
+              <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;opacity:.7;">
+                <span style="font-size:16px;flex-shrink:0;">⏰</span>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;">服务器即将到期</div>
+                  <div style="font-size:12px;color:var(--text3);margin-top:3px;">您的免费服务器将在 7 天后到期，完成续期任务可延长使用</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:4px;">2025-02-17 08:00</div>
+                </div>
+                <button class="wf-btn default" style="height:26px;font-size:11px;flex-shrink:0;">去续期</button>
+              </div>
+            </div>
+          </div>
+          <!-- 通知设置 -->
+          <div style="width:240px;flex-shrink:0;">
+            <div class="wf-card">
+              <div style="font-size:13px;font-weight:600;margin-bottom:12px;">⚙️ 推送渠道配置</div>
+              <div style="font-size:12px;display:flex;flex-direction:column;gap:10px;">
+                <div>
+                  <div style="font-weight:600;margin-bottom:6px;">实盘异常（止损/错误）</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <span class="wf-tag blue">站内信</span><span class="wf-tag green">Email</span><span class="wf-tag orange">Telegram</span>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-weight:600;margin-bottom:6px;">托管者离线</div>
+                  <div style="display:flex;gap:6px;">
+                    <span class="wf-tag blue">站内信</span><span class="wf-tag orange">Telegram</span>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-weight:600;margin-bottom:6px;">租赁收益结算</div>
+                  <div style="display:flex;gap:6px;">
+                    <span class="wf-tag blue">站内信</span><span class="wf-tag green">Email</span>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-weight:600;margin-bottom:6px;">服务器到期提醒</div>
+                  <div style="display:flex;gap:6px;">
+                    <span class="wf-tag blue">站内信</span>
+                  </div>
+                </div>
+              </div>
+              <button class="wf-btn primary" style="width:100%;margin-top:12px;height:28px;font-size:12px;justify-content:center;">⚙️ 管理通知设置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 用户权限矩阵 ─── -->
+  <div class="section" data-cat="todo" id="t-perm">
+    <div class="section-header">
+      <h2>用户权限矩阵（会员页面）</h2>
+      <span class="badge badge-todo">🚧 待完善</span>
+    </div>
+    <div class="annotation">💡 <span>明确各会员等级的功能边界，是会员体系落地定价的前置工作。同时可直接嵌入会员对比页，作为付费转化的核心内容。</span></div>
+    <div class="section-desc">以功能为行、会员等级为列的权限对比表。<b>✅ 支持 / ⚡ 有限制 / ✗ 不支持</b>三种状态清晰呈现差异，驱动用户了解升级价值。</div>
+    <div style="overflow-x:auto;">
+      <table class="wf-table" style="min-width:680px;">
+        <thead>
+          <tr>
+            <th style="width:200px;">功能</th>
+            <th style="text-align:center;width:110px;">免费版</th>
+            <th style="text-align:center;width:110px;background:#e6f4ff;color:var(--primary);">专业版 Pro</th>
+            <th style="text-align:center;width:110px;background:#1a1a2e;color:#fff;">企业版</th>
+            <th style="text-align:left;">备注</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:var(--bg2);"><td colspan="5" style="font-weight:700;font-size:12px;padding:8px 12px;">策略开发</td></tr>
+          <tr><td>策略上传数量</td><td style="text-align:center;">⚡ 2 个</td><td style="text-align:center;background:#f0f7ff;">✅ 无限</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅ 无限</td><td>免费版超出后提示升级</td></tr>
+          <tr><td>在线代码编辑器</td><td style="text-align:center;">⚡ 3 标签页</td><td style="text-align:center;background:#f0f7ff;">✅ 无限</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅ 无限</td><td></td></tr>
+          <tr><td>版本控制 / 历史回滚</td><td style="text-align:center;color:var(--danger);">✗</td><td style="text-align:center;background:#f0f7ff;">✅</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅</td><td>待开发功能</td></tr>
+          <tr style="background:var(--bg2);"><td colspan="5" style="font-weight:700;font-size:12px;padding:8px 12px;">回测</td></tr>
+          <tr><td>回测次数</td><td style="text-align:center;">⚡ 2次/天</td><td style="text-align:center;background:#f0f7ff;">✅ 无限</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅ 无限</td><td></td></tr>
+          <tr><td>历史数据时长</td><td style="text-align:center;">⚡ 1年</td><td style="text-align:center;background:#f0f7ff;">✅ 5年</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅ 全量</td><td></td></tr>
+          <tr><td>高级绩效分析报告</td><td style="text-align:center;color:var(--danger);">✗</td><td style="text-align:center;background:#f0f7ff;">✅</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅</td><td></td></tr>
+          <tr style="background:var(--bg2);"><td colspan="5" style="font-weight:700;font-size:12px;padding:8px 12px;">实盘交易</td></tr>
+          <tr><td>同时运行实盘数</td><td style="text-align:center;">⚡ 3 个</td><td style="text-align:center;background:#f0f7ff;">✅ 20 个</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅ 无限</td><td></td></tr>
+          <tr><td>Co-location 服务器</td><td style="text-align:center;color:var(--danger);">✗</td><td style="text-align:center;background:#f0f7ff;">✅ &lt;1ms</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅ 专属</td><td>低延迟交易节点</td></tr>
+          <tr><td>通知推送渠道</td><td style="text-align:center;">⚡ 站内信</td><td style="text-align:center;background:#f0f7ff;">✅ 全渠道</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅ 全渠道</td><td>含 Telegram Bot</td></tr>
+          <tr style="background:var(--bg2);"><td colspan="5" style="font-weight:700;font-size:12px;padding:8px 12px;">策略变现</td></tr>
+          <tr><td>策略出租变现</td><td style="text-align:center;color:var(--danger);">✗</td><td style="text-align:center;background:#f0f7ff;">✅ 70% 分成</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅ 70% 分成</td><td></td></tr>
+          <tr><td>因子广场提交</td><td style="text-align:center;">⚡ 5个/月</td><td style="text-align:center;background:#f0f7ff;">✅ 无限</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅ 无限</td><td></td></tr>
+          <tr style="background:var(--bg2);"><td colspan="5" style="font-weight:700;font-size:12px;padding:8px 12px;">企业专属</td></tr>
+          <tr><td>私有化部署</td><td style="text-align:center;color:var(--danger);">✗</td><td style="text-align:center;background:#f0f7ff;color:var(--danger);">✗</td><td style="text-align:center;background:#141720;color:#e6eaf0;">✅</td><td></td></tr>
+         </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── 回测系统 ─── -->
+  <div class="section" data-cat="todo" id="t-backtest">
+    <div class="section-header">
+      <h2>回测系统</h2>
+      <span class="badge badge-todo">🚧 待开发</span>
+    </div>
+    <div class="annotation">💡 <span>当前阶段：回测系统已规划设计，尚未上线。以下为交互原型设计稿。</span></div>
+    <div class="section-desc">用户在部署实盘前，可先用历史数据验证策略有效性。分为<b>回测配置</b>、<b>回测执行</b>和<b>回测报告</b>三个步骤。</div>
+
+    <!-- 回测配置 Wireframe -->
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">回测配置</span>
+        <span>策略：双均线策略 v1.5</span>
+      </div>
+      <div class="wf-body">
+        <div class="wf-tabs">
+          <div class="wf-tab active" onclick="switchBacktestTab('basic',this)">基础配置</div>
+          <div class="wf-tab" onclick="switchBacktestTab('fee',this)">费用设置</div>
+          <div class="wf-tab" onclick="switchBacktestTab('advanced',this)">高级配置（Pro）</div>
+        </div>
+
+        <!-- Tab: 基础配置 -->
+        <div id="bt-tab-basic">
+          <div class="wf-form-row">
+            <div>
+              <div class="wf-label">交易对</div>
+              <div class="wf-select">BTC/USDT <span>▾</span></div>
+            </div>
+            <div>
+              <div class="wf-label">时间范围</div>
+              <div class="wf-select">最近1年 <span>▾</span></div>
+            </div>
+            <div>
+              <div class="wf-label">时间粒度</div>
+              <div class="wf-select">1小时 (1H) <span>▾</span></div>
+            </div>
+          </div>
+          <div class="wf-form-row">
+            <div>
+              <div class="wf-label">初始资金 (USDT)</div>
+              <div class="wf-input">10,000</div>
+            </div>
+            <div>
+              <div class="wf-label">杠杆倍数</div>
+              <div class="wf-select">1x（现货） <span>▾</span></div>
+            </div>
+            <div>
+              <div class="wf-label">仓位模式</div>
+              <div class="wf-select">全仓 <span>▾</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: 费用设置 -->
+        <div id="bt-tab-fee" style="display:none;">
+          <div class="wf-form-row">
+            <div>
+              <div class="wf-label">Maker 手续费率</div>
+              <div class="wf-input">0.08%</div>
+            </div>
+            <div>
+              <div class="wf-label">Taker 手续费率</div>
+              <div class="wf-input">0.10%</div>
+            </div>
+            <div>
+              <div class="wf-label">滑点模型</div>
+              <div class="wf-select">固定滑点 <span>▾</span></div>
+            </div>
+          </div>
+          <div class="wf-form-row">
+            <div>
+              <div class="wf-label">滑点大小</div>
+              <div class="wf-input">0.05%</div>
+            </div>
+            <div>
+              <div class="wf-label">资金费率</div>
+              <div class="wf-select">使用历史实际费率 <span>▾</span></div>
+            </div>
+            <div>
+              <div class="wf-label">税费（可选）</div>
+              <div class="wf-input">0%</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--text3);background:var(--bg2);padding:10px 12px;border-radius:6px;">
+            💡 预计手续费支出：约 <b style="color:var(--danger);">$234.50</b>（基于近1年 BTC/USDT 历史成交量估算）
+          </div>
+        </div>
+
+        <!-- Tab: 高级配置（Pro） -->
+        <div id="bt-tab-advanced" style="display:none;">
+          <div style="background:#fff0f6;border:1px solid #ffadd2;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#9e1068;display:flex;align-items:center;gap:8px;">
+            🔒 <span>以下功能仅限 <b>Pro 及以上</b>会员使用。<a href="#t-member" onclick="goTo('t-member',null)" style="color:var(--primary);text-decoration:underline;">查看升级方案</a></span>
+          </div>
+          <div class="wf-form-row">
+            <div>
+              <div class="wf-label">止损触发方式</div>
+              <div class="wf-select">百分比止损 <span>▾</span></div>
+            </div>
+            <div>
+              <div class="wf-label">最大单笔亏损</div>
+              <div class="wf-input" style="opacity:.5;">2%（Pro解锁）</div>
+            </div>
+            <div>
+              <div class="wf-label">最大总回撤</div>
+              <div class="wf-input" style="opacity:.5;">15%（Pro解锁）</div>
+            </div>
+          </div>
+          <div class="wf-form-row">
+            <div>
+              <div class="wf-label">持仓上限（单币种）</div>
+              <div class="wf-input" style="opacity:.5;">30%（Pro解锁）</div>
+            </div>
+            <div>
+              <div class="wf-label">历史数据时长</div>
+              <div class="wf-select" style="opacity:.5;">5年（Pro解锁）<span>▾</span></div>
+            </div>
+            <div>
+              <div class="wf-label">压力测试场景</div>
+              <div class="wf-select" style="opacity:.5;">2020黑天鹅<span>▾</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;align-items:center;">
+          <button class="wf-btn primary" id="btn-run-backtest" onclick="runBacktest()">▶ 开始回测</button>
+          <button class="wf-btn default" onclick="saveConfig()">💾 保存配置</button>
+          <div id="backtest-progress-wrap" style="display:none;flex:1;max-width:260px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;">
+              <span id="backtest-progress-label">正在初始化...</span>
+              <span id="backtest-progress-pct">0%</span>
+            </div>
+            <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+              <div id="backtest-progress-bar" style="height:100%;width:0%;background:var(--primary);border-radius:3px;transition:width .4s;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 回测报告 Wireframe -->
+    <div class="wireframe" id="backtest-report" style="margin-top:16px;display:none;">
+      <div class="wireframe-bar">
+        <span class="wf-title">回测报告</span>
+        <span>双均线策略 v1.5 · 2024-01-01 至 2024-12-31</span>
+        <span style="margin-left:8px;background:rgba(80,200,80,.3);padding:2px 8px;border-radius:4px;font-size:11px;">✅ 回测完成</span>
+      </div>
+      <div class="wf-body">
+        <div class="mini-stat-row">
+          <div class="mini-stat"><div class="k">总收益率</div><div class="v" style="color:var(--success);">+38.5%</div></div>
+          <div class="mini-stat"><div class="k">最大回撤</div><div class="v" style="color:var(--danger);">-12.3%</div></div>
+          <div class="mini-stat"><div class="k">夏普比率</div><div class="v" style="color:var(--primary);">1.85</div></div>
+          <div class="mini-stat"><div class="k">胜率</div><div class="v">62.0%</div></div>
+          <div class="mini-stat"><div class="k">交易次数</div><div class="v">47次</div></div>
+          <div class="mini-stat"><div class="k">年化收益率</div><div class="v" style="color:var(--success);">+28.2%</div></div>
+          <div class="mini-stat"><div class="k">手续费支出</div><div class="v" style="color:var(--danger);">$234.5</div></div>
+          <div class="mini-stat"><div class="k">盈亏比</div><div class="v">1.97</div></div>
+        </div>
+        <div class="wf-row">
+          <div class="wf-card flex1">
+            <div class="chart-box" style="margin-bottom:0;">
+              <h4>资金曲线 (Equity Curve)</h4>
+              <svg width="100%" height="100" viewBox="0 0 500 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="eq" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#52c41a" stop-opacity=".25"/>
+                    <stop offset="100%" stop-color="#52c41a" stop-opacity=".03"/>
+                  </linearGradient>
+                  <linearGradient id="bh" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#86909c" stop-opacity=".15"/>
+                    <stop offset="100%" stop-color="#86909c" stop-opacity=".03"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0,80 L50,75 L100,70 L150,65 L180,68 L210,60 L250,52 L290,44 L330,38 L370,30 L420,22 L460,16 L500,10 L500,100 L0,100Z" fill="url(#eq)"/>
+                <path d="M0,80 L50,75 L100,70 L150,65 L180,68 L210,60 L250,52 L290,44 L330,38 L370,30 L420,22 L460,16 L500,10" stroke="#52c41a" stroke-width="2" fill="none"/>
+                <path d="M0,80 L100,76 L200,72 L300,65 L400,56 L500,48 L500,100 L0,100Z" fill="url(#bh)"/>
+                <path d="M0,80 L100,76 L200,72 L300,65 L400,56 L500,48" stroke="#86909c" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+                <text x="10" y="14" font-size="10" fill="#52c41a">策略曲线</text>
+                <text x="80" y="14" font-size="10" fill="#86909c">— — Buy&amp;Hold</text>
+              </svg>
+            </div>
+          </div>
+          <div class="wf-card" style="width:160px;flex-shrink:0;">
+            <div class="chart-box" style="margin-bottom:0;">
+              <h4>月度收益</h4>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;">
+                <div style="background:#b7eb8f;padding:4px;border-radius:2px;text-align:center;">+5.2%</div>
+                <div style="background:#f6ffed;padding:4px;border-radius:2px;text-align:center;">+3.1%</div>
+                <div style="background:#fff2f0;padding:4px;border-radius:2px;text-align:center;">-2.3%</div>
+                <div style="background:#b7eb8f;padding:4px;border-radius:2px;text-align:center;">+8.5%</div>
+                <div style="background:#f6ffed;padding:4px;border-radius:2px;text-align:center;">+4.2%</div>
+                <div style="background:#b7eb8f;padding:4px;border-radius:2px;text-align:center;">+6.7%</div>
+                <div style="background:#fff2f0;padding:4px;border-radius:2px;text-align:center;">-1.8%</div>
+                <div style="background:#f6ffed;padding:4px;border-radius:2px;text-align:center;">+3.9%</div>
+                <div style="background:#f6ffed;padding:4px;border-radius:2px;text-align:center;">+5.1%</div>
+                <div style="background:#f6ffed;padding:4px;border-radius:2px;text-align:center;">+2.8%</div>
+                <div style="background:#f6ffed;padding:4px;border-radius:2px;text-align:center;">+4.6%</div>
+                <div style="background:#f6ffed;padding:4px;border-radius:2px;text-align:center;">+3.5%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="wf-btn primary">📄 导出 PDF</button>
+          <button class="wf-btn default">📊 导出 Excel</button>
+          <button class="wf-btn default">🔗 生成分享链接</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 实盘监控详情 ─── -->
+  <div class="section" data-cat="todo" id="t-monitor">
+    <div class="section-header">
+      <h2>实盘监控详情</h2>
+      <span class="badge badge-todo">🚧 待开发</span>
+    </div>
+    <div class="annotation">💡 <span>当前实盘管理页已完成列表功能。监控详情页（含实时收益曲线、持仓管理、风控状态）为待开发模块。</span></div>
+    <div class="section-desc">点击任一实盘进入详情页，实时展示收益曲线、当前持仓、最新交易记录和风控指标，支持策略暂停/停止/查看日志等操作。</div>
+
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">实盘监控详情</span>
+        <span>双均线策略 v1.5</span>
+        <span style="background:#52c41a;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:8px;">🟢 运行中</span>
+      </div>
+      <div class="wf-body">
+        <!-- 收益概览 -->
+        <div class="wf-row" style="margin-bottom:16px;">
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">实时收益</div>
+            <div class="wf-val green">+$125.30</div>
+            <div style="font-size:11px;color:var(--success);">+2.51%</div>
+          </div>
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">今日收益</div>
+            <div class="wf-val green">+$45.20</div>
+            <div style="font-size:11px;color:var(--success);">+0.90%</div>
+          </div>
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">累计收益</div>
+            <div class="wf-val green">+$892.40</div>
+            <div style="font-size:11px;color:var(--success);">+17.85%</div>
+          </div>
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">运行时长</div>
+            <div class="wf-val blue" style="font-size:16px;">3天2小时</div>
+            <div style="font-size:11px;color:var(--text3);">最后活动: 2分钟前</div>
+          </div>
+        </div>
+
+        <!-- 实时收益曲线 -->
+        <div class="chart-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <h4>实时资金曲线</h4>
+            <div style="display:flex;gap:4px;">
+              <button class="wf-btn default" style="height:24px;font-size:11px;">1H</button>
+              <button class="wf-btn primary" style="height:24px;font-size:11px;">24H</button>
+              <button class="wf-btn default" style="height:24px;font-size:11px;">7D</button>
+              <button class="wf-btn default" style="height:24px;font-size:11px;">全部</button>
+            </div>
+          </div>
+          <svg width="100%" height="90" viewBox="0 0 600 90" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="lv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#52c41a" stop-opacity=".2"/><stop offset="100%" stop-color="#52c41a" stop-opacity=".02"/></linearGradient></defs>
+            <line x1="0" y1="65" x2="600" y2="65" stroke="#e5e6eb" stroke-dasharray="3,3"/>
+            <path d="M0,65 L60,62 L120,65 L180,58 L240,52 L300,46 L360,40 L420,35 L480,28 L540,22 L600,16 L600,90 L0,90Z" fill="url(#lv)"/>
+            <path d="M0,65 L60,62 L120,65 L180,58 L240,52 L300,46 L360,40 L420,35 L480,28 L540,22 L600,16" stroke="#52c41a" stroke-width="2" fill="none"/>
+            <text x="4" y="62" font-size="9" fill="#86909c">$5,000</text>
+            <text x="4" y="88" font-size="9" fill="#86909c">初始资金</text>
+            <text x="560" y="13" font-size="9" fill="#52c41a">$5,892</text>
+          </svg>
+        </div>
+
+        <!-- 当前持仓 + 风控 -->
+        <div class="wf-row">
+          <div class="wf-card flex1">
+            <h4 style="font-size:13px;font-weight:600;margin-bottom:10px;">当前持仓</h4>
+            <table class="wf-table">
+              <thead><tr><th>币种</th><th>数量</th><th>成本价</th><th>当前价</th><th>浮盈</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><b>BTC/USDT</b></td><td>0.15</td><td>$50,200</td>
+                  <td style="color:var(--success);font-weight:600;">$51,500</td>
+                  <td style="color:var(--success);">+$195 (+2.6%)</td>
+                  <td><button class="wf-btn default" style="height:24px;font-size:11px;">平仓</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="wf-card" style="width:200px;flex-shrink:0;">
+            <h4 style="font-size:13px;font-weight:600;margin-bottom:10px;">风控状态</h4>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+              <div style="display:flex;justify-content:space-between;"><span>当前回撤</span><span style="color:var(--danger);">-3.2%</span></div>
+              <div class="progress"><div class="progress-fill" style="width:32%;background:var(--danger);"></div></div>
+              <div style="display:flex;justify-content:space-between;"><span>最大回撤</span><span style="color:var(--warning);">-8.5%</span></div>
+              <div class="progress"><div class="progress-fill" style="width:57%;background:var(--warning);"></div></div>
+              <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;">
+                <span style="color:var(--success);">✅ 单笔止损未触发</span>
+                <span style="color:var(--success);">✅ 累计止损未触发</span>
+                <span style="color:var(--success);">✅ 日亏损未触发</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作 -->
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="wf-btn default">⏸ 暂停策略</button>
+          <button class="wf-btn default" style="color:var(--danger);border-color:var(--danger);">⏹ 停止策略</button>
+          <button class="wf-btn default">📋 查看日志</button>
+          <button class="wf-btn default">⚙️ 调整参数</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 绩效分析 ─── -->
+  <div class="section" data-cat="todo" id="t-perf">
+    <div class="section-header">
+      <h2>绩效分析</h2>
+      <span class="badge badge-todo">🚧 待开发</span>
+    </div>
+    <div class="annotation">💡 <span>对策略历史表现进行深度分析，包含时间维度分析、归因分析、多策略对比、风险评估等。</span></div>
+
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">绩效分析报告</span>
+        <span>双均线策略 v1.5 · 2025-02-01 至 2025-02-24</span>
+      </div>
+      <div class="wf-body">
+        <div class="mini-stat-row">
+          <div class="mini-stat"><div class="k">总收益率</div><div class="v" style="color:var(--success);">+17.85%</div></div>
+          <div class="mini-stat"><div class="k">年化收益</div><div class="v" style="color:var(--success);">+314%</div></div>
+          <div class="mini-stat"><div class="k">最大回撤</div><div class="v" style="color:var(--danger);">-8.52%</div></div>
+          <div class="mini-stat"><div class="k">夏普比率</div><div class="v" style="color:var(--primary);">2.15</div></div>
+          <div class="mini-stat"><div class="k">索提诺比率</div><div class="v" style="color:var(--primary);">2.89</div></div>
+          <div class="mini-stat"><div class="k">卡玛比率</div><div class="v" style="color:var(--primary);">3.12</div></div>
+          <div class="mini-stat"><div class="k">胜率</div><div class="v">65.79%</div></div>
+          <div class="mini-stat"><div class="k">盈亏比</div><div class="v">2.13</div></div>
+        </div>
+
+        <div class="wf-row">
+          <div class="wf-card flex1">
+            <h4 style="font-size:12px;font-weight:600;margin-bottom:8px;">📅 月度收益表</h4>
+            <table class="wf-table">
+              <thead><tr><th>月份</th><th>收益额</th><th>收益率</th><th>交易次数</th><th>胜率</th></tr></thead>
+              <tbody>
+                <tr><td>2025-02</td><td style="color:var(--success);">+$892.40</td><td style="color:var(--success);">+17.85%</td><td>38</td><td>65.79%</td></tr>
+                <tr><td>2025-01</td><td style="color:var(--success);">+$456.20</td><td style="color:var(--success);">+9.12%</td><td>42</td><td>61.90%</td></tr>
+                <tr><td>2024-12</td><td style="color:var(--danger);">-$128.50</td><td style="color:var(--danger);">-2.57%</td><td>35</td><td>45.71%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="wf-card" style="width:220px;flex-shrink:0;">
+            <h4 style="font-size:12px;font-weight:600;margin-bottom:8px;">🔍 归因分析</h4>
+            <div style="font-size:12px;display:flex;flex-direction:column;gap:8px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;"><span>市场贡献</span><span style="color:var(--success);">+8.32%</span></div>
+                <div class="progress" style="margin-top:3px;"><div class="progress-fill" style="width:47%;background:var(--success);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;"><span>择时贡献</span><span style="color:var(--success);">+6.50%</span></div>
+                <div class="progress" style="margin-top:3px;"><div class="progress-fill" style="width:36%;background:var(--primary);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;"><span>仓位管理</span><span style="color:var(--success);">+4.20%</span></div>
+                <div class="progress" style="margin-top:3px;"><div class="progress-fill" style="width:24%;background:#722ed1;"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;"><span>交易成本</span><span style="color:var(--danger);">-1.17%</span></div>
+                <div class="progress" style="margin-top:3px;"><div class="progress-fill" style="width:7%;background:var(--danger);"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="wf-btn primary">📄 导出报告</button>
+          <button class="wf-btn default">🔗 生成分享链接</button>
+          <button class="wf-btn default">🆚 多策略对比</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 资产统计 ─── -->
+  <div class="section" data-cat="todo" id="t-asset">
+    <div class="section-header">
+      <h2>资产统计</h2>
+      <span class="badge badge-todo">🚧 待开发</span>
+    </div>
+    <div class="annotation">💡 <span>汇总用户在所有交易所、所有策略中的总资产，提供全局资产视图、净值曲线和盈亏来源分解。</span></div>
+
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">我的资产</span>
+        <span>同步时间: 刚刚</span>
+        <button class="wf-btn default" style="height:24px;font-size:11px;margin-left:8px;">🔄 同步余额</button>
+      </div>
+      <div class="wf-body">
+        <div class="wf-row" style="margin-bottom:16px;">
+          <div class="wf-card flex1">
+            <div class="wf-label">总资产（估值）</div>
+            <div class="wf-val blue" style="font-size:28px;">$28,456.78</div>
+            <div style="font-size:12px;color:var(--success);margin-top:4px;">24h +$1,234.56 (+4.53%) ↑</div>
+          </div>
+          <div class="wf-card flex1">
+            <h4 style="font-size:12px;font-weight:600;margin-bottom:10px;">按交易所分布</h4>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span>Binance</span><span>$15,234 <span style="color:var(--text3);">53.5%</span></span></div>
+              <div class="progress"><div class="progress-fill" style="width:53.5%;background:var(--primary);"></div></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span>OKX</span><span>$8,456 <span style="color:var(--text3);">29.7%</span></span></div>
+              <div class="progress"><div class="progress-fill" style="width:29.7%;background:#722ed1;"></div></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span>Bybit</span><span>$4,765 <span style="color:var(--text3);">16.8%</span></span></div>
+              <div class="progress"><div class="progress-fill" style="width:16.8%;background:var(--warning);"></div></div>
+            </div>
+          </div>
+          <div class="wf-card flex1">
+            <h4 style="font-size:12px;font-weight:600;margin-bottom:10px;">币种分布 (Top 4)</h4>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+              <div style="display:flex;justify-content:space-between;"><span>BTC</span><span style="font-weight:600;">$14,280 <span style="color:var(--text3);">50.2%</span></span></div>
+              <div style="display:flex;justify-content:space-between;"><span>ETH</span><span style="font-weight:600;">$9,975 <span style="color:var(--text3);">35.0%</span></span></div>
+              <div style="display:flex;justify-content:space-between;"><span>USDT</span><span style="font-weight:600;">$3,850 <span style="color:var(--text3);">13.5%</span></span></div>
+              <div style="display:flex;justify-content:space-between;"><span>其他</span><span style="font-weight:600;">$351 <span style="color:var(--text3);">1.3%</span></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 净值曲线 -->
+        <div class="chart-box">
+          <h4>历史净值曲线</h4>
+          <svg width="100%" height="80" viewBox="0 0 600 80" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="nv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1677ff" stop-opacity=".2"/><stop offset="100%" stop-color="#1677ff" stop-opacity=".02"/></linearGradient></defs>
+            <path d="M0,70 L60,68 L120,64 L180,62 L200,66 L230,58 L280,50 L340,42 L380,36 L430,28 L480,20 L540,14 L600,8 L600,80 L0,80Z" fill="url(#nv)"/>
+            <path d="M0,70 L60,68 L120,64 L180,62 L200,66 L230,58 L280,50 L340,42 L380,36 L430,28 L480,20 L540,14 L600,8" stroke="var(--primary)" stroke-width="2" fill="none"/>
+            <line x1="0" y1="70" x2="600" y2="70" stroke="#e5e6eb" stroke-dasharray="3,3"/>
+            <text x="4" y="68" font-size="9" fill="#86909c">$20,000</text>
+            <text x="565" y="6" font-size="9" fill="var(--primary)">$28,456</text>
+          </svg>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <button class="wf-btn primary">📊 下载财务报表</button>
+          <button class="wf-btn default">📋 完整持仓列表</button>
+          <button class="wf-btn default">⚠️ 风险敞口分析</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 版本控制 ─── -->
+  <div class="section" data-cat="todo" id="t-version">
+    <div class="section-header">
+      <h2>版本控制</h2>
+      <span class="badge badge-todo">🚧 待开发</span>
+    </div>
+    <div class="annotation">💡 <span>在代码编辑器中自动保存每次策略修改，支持查看历史版本、对比 Diff、回滚到旧版本。类似 Git 的轻量化版本管理。</span></div>
+
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">版本历史 · 双均线策略</span>
+        <button class="wf-btn default" style="height:24px;font-size:11px;margin-left:8px;">⬅ 返回编辑器</button>
+      </div>
+      <div class="wf-body">
+        <div style="display:flex;gap:16px;">
+          <!-- Version list -->
+          <div style="width:240px;flex-shrink:0;">
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;">版本列表</div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="background:var(--primary-light);border:1px solid var(--primary);border-radius:6px;padding:10px 12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-weight:600;color:var(--primary);font-size:13px;">v1.5</span>
+                  <span style="font-size:10px;background:var(--primary);color:#fff;padding:1px 5px;border-radius:3px;">当前</span>
+                </div>
+                <div style="font-size:11px;color:var(--text3);margin-top:3px;">2025-02-24 15:30</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px;">调整止损比例为5%</div>
+                <div style="font-size:11px;color:var(--success);margin-top:2px;">回测: +18.5%</div>
+              </div>
+              <div style="background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px;cursor:pointer;">
+                <div style="font-weight:600;font-size:13px;">v1.4</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:3px;">2025-02-24 14:20</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px;">优化均线周期参数</div>
+                <div style="font-size:11px;color:var(--success);">回测: +15.2%</div>
+              </div>
+              <div style="background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px;cursor:pointer;">
+                <div style="font-weight:600;font-size:13px;">v1.3</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:3px;">2025-02-23 18:45</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px;">添加RSI过滤条件</div>
+                <div style="font-size:11px;color:var(--success);">回测: +12.8%</div>
+              </div>
+            </div>
+          </div>
+          <!-- Diff view -->
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;">v1.4 → v1.5 代码差异</div>
+            <div style="background:#1e1e1e;border-radius:8px;padding:16px;font-family:monospace;font-size:12px;line-height:1.8;overflow-x:auto;">
+              <div style="color:#9cdcfe;">def initialize(context):</div>
+              <div style="color:#9cdcfe;padding-left:20px;">context.short_window = 5</div>
+              <div style="background:rgba(255,0,0,.15);color:#ff6b6b;padding-left:20px;">-&nbsp;&nbsp;&nbsp;context.stop_loss = 0.03&nbsp;&nbsp;&nbsp;<span style="color:#666;"># 旧值</span></div>
+              <div style="background:rgba(0,255,0,.1);color:#6bcf6b;padding-left:20px;">+&nbsp;&nbsp;&nbsp;context.stop_loss = 0.05&nbsp;&nbsp;&nbsp;<span style="color:#666;"># 新值</span></div>
+              <div style="color:#9cdcfe;padding-left:20px;">context.take_profit = 0.1</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+              <button class="wf-btn default" style="height:28px;font-size:12px;">🔄 回滚到 v1.4</button>
+              <button class="wf-btn default" style="height:28px;font-size:12px;">🏷️ 添加标签</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 会员体系 ─── -->
+  <div class="section" data-cat="todo" id="t-member">
+    <div class="section-header">
+      <h2>会员体系</h2>
+      <span class="badge badge-todo">🚧 定价待定</span>
+    </div>
+    <div class="annotation">💡 <span>功能分级已规划完毕，具体定价方案讨论中。以下为会员权益设计稿。</span></div>
+
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">会员中心</span>
+      </div>
+      <div class="wf-body">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+          <!-- Free -->
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;">
+            <div style="font-size:13px;font-weight:600;color:var(--text3);margin-bottom:4px;">免费版</div>
+            <div style="font-size:28px;font-weight:800;margin-bottom:4px;">$0</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">永久免费</div>
+            <div style="text-align:left;font-size:12px;display:flex;flex-direction:column;gap:7px;">
+              <div>✓ 策略上限：2 个</div>
+              <div>✓ 回测：每日 2 次</div>
+              <div>✓ 实盘交易：支持</div>
+              <div>✓ 服务器试用：30 天</div>
+              <div style="color:var(--text3);">✗ 策略出租变现</div>
+              <div style="color:var(--text3);">✗ Co-location 服务器</div>
+            </div>
+            <button class="wf-btn default" style="width:100%;margin-top:16px;justify-content:center;">当前方案</button>
+          </div>
+          <!-- Pro -->
+          <div style="background:linear-gradient(135deg,#e6f4ff,#f0f5ff);border:2px solid var(--primary);border-radius:10px;padding:20px;text-align:center;position:relative;">
+            <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;font-size:11px;padding:2px 12px;border-radius:10px;white-space:nowrap;">推荐</div>
+            <div style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:4px;">专业版 Pro</div>
+            <div style="font-size:28px;font-weight:800;margin-bottom:4px;color:var(--primary);">定价待定</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">/ 月</div>
+            <div style="text-align:left;font-size:12px;display:flex;flex-direction:column;gap:7px;">
+              <div>✓ 策略数量：无限</div>
+              <div>✓ 回测：无限次</div>
+              <div>✓ 实盘：最多 20 个同时运行</div>
+              <div>✓ Co-location 服务器（&lt;1ms）</div>
+              <div>✓ 策略出租变现</div>
+              <div>✓ 优先客服（12h 响应）</div>
+            </div>
+            <button class="wf-btn primary" style="width:100%;margin-top:16px;justify-content:center;">升级 Pro</button>
+          </div>
+          <!-- Enterprise -->
+          <div style="background:#1a1a2e;border-radius:10px;padding:20px;text-align:center;color:#fff;">
+            <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.6);margin-bottom:4px;">企业版</div>
+            <div style="font-size:28px;font-weight:800;margin-bottom:4px;">定价待定</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:16px;">/ 月</div>
+            <div style="text-align:left;font-size:12px;display:flex;flex-direction:column;gap:7px;color:rgba(255,255,255,.8);">
+              <div>✓ 所有 Pro 权益</div>
+              <div>✓ 私有化部署</div>
+              <div>✓ 白标授权</div>
+              <div>✓ 团队协作工作区</div>
+              <div>✓ 1对1 专属支持（2h）</div>
+              <div>✓ API 无限调用</div>
+            </div>
+            <button class="wf-btn default" style="width:100%;margin-top:16px;justify-content:center;color:#fff;border-color:rgba(255,255,255,.3);">联系销售</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <div class="divider"></div>
+  <h2 style="font-size:16px;font-weight:700;color:#c41d7f;margin-bottom:24px;display:flex;align-items:center;gap:8px;">
+    <span style="background:#fff0f6;border:1px solid #ffadd2;padding:4px 12px;border-radius:20px;">📣 运营增长功能</span>
+  </h2>
+
+  <!-- ─── 服务器续费任务中心 ─── -->
+  <div class="section" data-cat="ops" id="o-task">
+    <div class="section-header">
+      <h2>服务器续费任务中心</h2>
+      <span class="badge badge-ops">📣 运营功能</span>
+    </div>
+    <div class="annotation" style="background:#fff0f6;border-color:#ffadd2;color:#9e1068;">
+      💡 <span>通过"免费服务器 30 天"降低用户门槛，以交易续期 + 裂变续期双机制筛选高质量用户，同时激励实盘交易和拉新行为。</span>
+    </div>
+    <div class="section-desc">
+      服务器初始有效期 30 天，用户可通过完成指定任务延长使用期限，无需付费即可长期使用服务器资源。核心目的：<b>以行为筛选用户质量，覆盖服务器成本</b>。
+    </div>
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">我的服务器 · 任务续期</span>
+        <span style="background:rgba(255,255,255,.15);padding:2px 8px;border-radius:4px;font-size:11px;">剩余有效期：<b>18 天</b></span>
+      </div>
+      <div class="wf-body">
+        <!-- 进度概览 -->
+        <div class="wf-row" style="margin-bottom:20px;">
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">当前有效期</div>
+            <div class="wf-val blue">18 天</div>
+            <div style="font-size:11px;color:var(--text3);">到期：2025-03-15</div>
+          </div>
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">本月已续期</div>
+            <div class="wf-val green">+45 天</div>
+            <div style="font-size:11px;color:var(--text3);">裂变续期上限：60 天/月</div>
+          </div>
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">累计已邀请</div>
+            <div class="wf-val blue">3 人</div>
+            <div style="font-size:11px;color:var(--text3);">已产生实盘交易：2 人</div>
+          </div>
+        </div>
+
+        <!-- 任务列表 -->
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;">任务列表</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <!-- 已完成任务 -->
+          <div style="background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+            <span style="font-size:20px;">✅</span>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;">首次实盘交易</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:2px;">通过 API 完成首次实盘交易（累计交易额 &gt;$1,000）</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:18px;font-weight:700;color:var(--success);">+30 天</div>
+              <div style="font-size:11px;color:var(--text3);">已于 2025-02-01 完成</div>
+            </div>
+          </div>
+          <!-- 进行中任务 -->
+          <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+            <span style="font-size:20px;">👥</span>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;">裂变邀请 · 本月</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:2px;">每成功邀请 1 名用户完成实盘交易，续期 15 天（上限 60 天/月）</div>
+              <div class="progress" style="margin-top:8px;height:6px;">
+                <div class="progress-fill" style="width:33%;background:var(--primary);"></div>
+              </div>
+              <div style="font-size:11px;color:var(--text3);margin-top:3px;">本月有效邀请：2/4 人（已获 30 天，上限 60 天）</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:18px;font-weight:700;color:var(--primary);">+15 天/人</div>
+              <button class="wf-btn primary" style="margin-top:6px;height:28px;font-size:12px;">复制邀请链接</button>
+            </div>
+          </div>
+          <!-- 锁定任务（付费解锁） -->
+          <div style="background:var(--bg2);border:1px dashed var(--border);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px;opacity:.7;">
+            <span style="font-size:20px;">🔒</span>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:var(--text3);">因子挖掘任务（即将上线）</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:2px;">提交 Sharpe &gt; 1.5 的有效因子，获得额外服务器时长</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:18px;font-weight:700;color:var(--text3);">+60 天</div>
+              <div style="font-size:11px;color:var(--text3);">即将上线</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 邀请记录 -->
+        <div style="font-size:13px;font-weight:600;margin:16px 0 10px;">邀请记录</div>
+        <table class="wf-table">
+          <thead><tr><th>被邀请用户</th><th>注册时间</th><th>是否完成交易</th><th>续期获得</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>user_a***@gmail.com</td><td>2025-02-10</td>
+              <td><span class="wf-tag green">已完成</span></td>
+              <td style="color:var(--success);">+15 天</td>
+              <td><span class="wf-tag green">已结算</span></td>
+            </tr>
+            <tr>
+              <td>user_b***@qq.com</td><td>2025-02-18</td>
+              <td><span class="wf-tag green">已完成</span></td>
+              <td style="color:var(--success);">+15 天</td>
+              <td><span class="wf-tag green">已结算</span></td>
+            </tr>
+            <tr>
+              <td>user_c***@163.com</td><td>2025-02-22</td>
+              <td><span class="wf-tag orange">待完成</span></td>
+              <td style="color:var(--text3);">待结算</td>
+              <td><span class="wf-tag orange">进行中</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 竞品会员置换 ─── -->
+  <div class="section" data-cat="ops" id="o-exchange">
+    <div class="section-header">
+      <h2>竞品会员置换</h2>
+      <span class="badge badge-ops">📣 运营功能</span>
+    </div>
+    <div class="annotation" style="background:#fff0f6;border-color:#ffadd2;color:#9e1068;">
+      💡 <span>面向 FMZ、3Commas、TradingView 等平台的付费用户，凭借原平台剩余会员账单，1:1 兑换等时长的 OpenQuant 会员，降低迁移成本。</span>
+    </div>
+    <div class="section-desc">
+      用户在官网首页显眼位置入口进入，上传竞品付费账单截图，AI 初步识别 + 人工 24h 内审核，通过后按 <b>竞品剩余时长 × 1 倍</b>发放会员。支持平台：FMZ / 3Commas / TradingView Premium / QuantConnect / 聚宽。
+    </div>
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">会员置换 · 提交申请</span>
+      </div>
+      <div class="wf-body">
+        <div style="display:flex;gap:20px;">
+          <!-- 提交表单 -->
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:12px;">📋 申请流程</div>
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">1</div>
+                <div style="width:2px;flex:1;background:var(--border);min-height:30px;"></div>
+              </div>
+              <div style="flex:1;padding-top:4px;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:4px;">选择来源平台</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <div style="padding:6px 12px;border:2px solid var(--primary);border-radius:6px;font-size:12px;background:var(--primary-light);color:var(--primary);font-weight:600;">FMZ</div>
+                  <div style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">3Commas</div>
+                  <div style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">TradingView</div>
+                  <div style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">QuantConnect</div>
+                  <div style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">聚宽</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">2</div>
+                <div style="width:2px;flex:1;background:var(--border);min-height:40px;"></div>
+              </div>
+              <div style="flex:1;padding-top:4px;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">上传付费账单截图</div>
+                <div style="border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;background:var(--bg2);font-size:12px;color:var(--text3);">
+                  <div style="font-size:24px;margin-bottom:4px;">📎</div>
+                  <div>点击或拖拽上传截图</div>
+                  <div style="margin-top:4px;font-size:11px;">需包含：用户名 / 套餐名称 / 到期日期<br>支持 PNG / JPG，最大 5MB</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">3</div>
+              <div style="flex:1;padding-top:4px;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">填写原平台注册邮箱（可选）</div>
+                <div class="wf-input">example@gmail.com</div>
+              </div>
+            </div>
+            <button class="wf-btn primary" style="width:100%;justify-content:center;">提交置换申请</button>
+            <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px;">审核周期：24小时内 · 同一账单仅可使用1次</div>
+          </div>
+          <!-- 规则说明 + 审核记录 -->
+          <div style="width:240px;flex-shrink:0;">
+            <div class="wf-card" style="margin-bottom:12px;">
+              <div style="font-size:13px;font-weight:600;margin-bottom:10px;">🎁 置换规则</div>
+              <div style="font-size:12px;line-height:1.8;color:var(--text2);">
+                <div style="display:flex;justify-content:space-between;"><span>FMZ 剩余 2 个月</span><span style="color:var(--primary);font-weight:600;">→ 2 个月</span></div>
+                <div style="display:flex;justify-content:space-between;"><span>3Commas 剩余 1 年</span><span style="color:var(--primary);font-weight:600;">→ 1 年</span></div>
+                <div style="border-top:1px solid var(--border);margin:8px 0;"></div>
+                <div style="color:var(--text3);">· 置换比例：1 : 1</div>
+                <div style="color:var(--text3);">· 每账号仅限1次</div>
+                <div style="color:var(--text3);">· AI 识别 + 人工复核</div>
+              </div>
+            </div>
+            <div class="wf-card">
+              <div style="font-size:13px;font-weight:600;margin-bottom:10px;">📊 我的申请记录</div>
+              <div style="font-size:12px;color:var(--text3);text-align:center;padding:16px 0;">暂无申请记录</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 因子广场 ─── -->
+  <div class="section" data-cat="ops" id="o-factor">
+    <div class="section-header">
+      <h2>因子广场（WorldQuant 模式）</h2>
+      <span class="badge badge-ops">📣 运营功能</span>
+    </div>
+    <div class="annotation" style="background:#fff0f6;border-color:#ffadd2;color:#9e1068;">
+      💡 <span>通过"因子挖掘竞赛"激励用户创作策略因子，AI + 人工评分，优质因子可在平台出售（作者 70% / 平台 30%），形成策略护城河。</span>
+    </div>
+    <div class="section-desc">
+      类 TradingView 的因子提交与展示平台。平台定期发布"寻找相关性"任务（如"寻找与 BTC 波动率呈负相关的 15 分钟因子"），用户提交因子后系统自动回测评分，Sharpe &gt; 1.5 且相关性低的因子可获得会员奖励或 USDT 现金。
+    </div>
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">因子广场</span>
+        <button class="wf-btn primary" style="height:26px;font-size:11px;">+ 提交我的因子</button>
+      </div>
+      <div class="wf-body">
+        <!-- 当前任务 Banner -->
+        <div style="background:linear-gradient(135deg,#1677ff,#531dab);border-radius:10px;padding:20px;color:#fff;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="background:rgba(255,255,255,.2);padding:2px 8px;border-radius:10px;font-size:11px;">🔥 当前任务</span>
+            <span style="font-size:12px;opacity:.8;">截止：2025-03-01 · 剩余 5 天</span>
+          </div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:6px;">寻找与 BTC 波动率呈<u>负相关</u>的 15 分钟 K 线因子</div>
+          <div style="font-size:12px;opacity:.9;">评分标准：Sharpe &gt; 1.5 且与现有因子相关性 &lt; 0.3</div>
+          <div style="display:flex;gap:16px;margin-top:14px;font-size:12px;">
+            <div>🏆 Sharpe 达标：<b>30天会员</b></div>
+            <div>💰 Top 3：<b>$50 USDT</b></div>
+            <div>👥 已提交：<b>47 个因子</b></div>
+          </div>
+        </div>
+
+        <div class="wf-tabs">
+          <div class="wf-tab active">排行榜</div>
+          <div class="wf-tab">我的提交</div>
+          <div class="wf-tab">因子市场</div>
+          <div class="wf-tab">历史任务</div>
+        </div>
+
+        <!-- 排行榜 -->
+        <table class="wf-table">
+          <thead><tr><th>排名</th><th>因子名称</th><th>提交者</th><th>Sharpe</th><th>最大回撤</th><th>相关性</th><th>评分</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr style="background:#fffbe6;">
+              <td><b style="font-size:16px;">🥇</b></td>
+              <td><b>vol_neg_ema_spread</b></td>
+              <td>quant_master_88</td>
+              <td><span style="color:var(--success);font-weight:700;">2.34</span></td>
+              <td style="color:var(--danger);">-8.2%</td>
+              <td style="color:var(--success);">0.12</td>
+              <td><b style="color:#d48806;">95分</b></td>
+              <td><button class="wf-btn default" style="height:24px;font-size:11px;">查看详情</button> <button class="wf-btn primary" style="height:24px;font-size:11px;">$9.9购买</button></td>
+            </tr>
+            <tr>
+              <td><b style="font-size:16px;">🥈</b></td>
+              <td>btc_vix_reversal_v2</td>
+              <td>python_quant</td>
+              <td><span style="color:var(--success);font-weight:700;">1.98</span></td>
+              <td style="color:var(--danger);">-11.5%</td>
+              <td style="color:var(--success);">0.21</td>
+              <td><b style="color:var(--text2);">88分</b></td>
+              <td><button class="wf-btn default" style="height:24px;font-size:11px;">查看详情</button> <button class="wf-btn primary" style="height:24px;font-size:11px;">$6.9购买</button></td>
+            </tr>
+            <tr>
+              <td><b style="font-size:16px;">🥉</b></td>
+              <td>momentum_decay_15m</td>
+              <td>rust_trader</td>
+              <td><span style="color:var(--success);font-weight:700;">1.72</span></td>
+              <td style="color:var(--danger);">-9.8%</td>
+              <td style="color:var(--success);">0.28</td>
+              <td><b style="color:var(--text2);">81分</b></td>
+              <td><button class="wf-btn default" style="height:24px;font-size:11px;">查看详情</button> <button class="wf-btn default" style="height:24px;font-size:11px;">免费预览</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 代理推广中心 ─── -->
+  <div class="section" data-cat="ops" id="o-agent">
+    <div class="section-header">
+      <h2>代理推广中心</h2>
+      <span class="badge badge-ops">📣 运营功能</span>
+    </div>
+    <div class="annotation" style="background:#fff0f6;border-color:#ffadd2;color:#9e1068;">
+      💡 <span>通过分层佣金体系让用户成为推广员，面向社群群主、量化博主、职业交易员。每月举办代理竞赛，Top 3 额外奖励现金 + VIP。</span>
+    </div>
+    <div class="section-desc">
+      三级代理体系：初级（推荐 5 人付费，佣金 30%）→ 中级（20 人，40%）→ 高级（50 人，60%）。每月 1 日开启月度竞赛，比拼当月带来的付费用户数。
+    </div>
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">我的代理中心</span>
+        <span style="background:rgba(255,215,0,.3);color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;">⭐ 中级代理</span>
+      </div>
+      <div class="wf-body">
+        <!-- 总览 -->
+        <div class="wf-row" style="margin-bottom:20px;">
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">累计佣金收入</div>
+            <div class="wf-val blue">$1,248.50</div>
+            <div style="font-size:11px;color:var(--text3);">本月：$320.00</div>
+          </div>
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">累计推荐付费人数</div>
+            <div class="wf-val green">28 人</div>
+            <div style="font-size:11px;color:var(--text3);">距高级代理还需 22 人</div>
+          </div>
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">当前佣金比例</div>
+            <div class="wf-val" style="color:#722ed1;">40%</div>
+            <div style="font-size:11px;color:var(--text3);">中级代理</div>
+          </div>
+          <div class="wf-card flex1" style="text-align:center;">
+            <div class="wf-label">可提现余额</div>
+            <div class="wf-val blue">$398.50</div>
+            <button class="wf-btn primary" style="margin-top:6px;height:26px;font-size:11px;">申请提现</button>
+          </div>
+        </div>
+
+        <!-- 等级体系 -->
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;">代理等级体系</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+          <div style="border:1px solid var(--border);border-radius:8px;padding:14px;background:#fff;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px;">初级代理</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.7;">
+              条件：推荐 5 人付费<br>
+              佣金：<b style="color:var(--primary);">30%</b><br>
+              额外奖励：—
+            </div>
+          </div>
+          <div style="border:2px solid #722ed1;border-radius:8px;padding:14px;background:#f9f0ff;position:relative;">
+            <div style="position:absolute;top:-10px;left:12px;background:#722ed1;color:#fff;font-size:10px;padding:1px 8px;border-radius:8px;">当前等级</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:#531dab;">中级代理</div>
+            <div style="font-size:12px;color:#531dab;line-height:1.7;">
+              条件：推荐 20 人付费<br>
+              佣金：<b>40%</b><br>
+              额外奖励：赠 3 个月会员
+            </div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:8px;padding:14px;background:var(--bg2);">
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--text3);">高级代理 🔒</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.7;">
+              条件：推荐 50 人付费<br>
+              佣金：<b>60%</b><br>
+              额外奖励：策略租赁时长
+            </div>
+            <div class="progress" style="margin-top:8px;"><div class="progress-fill" style="width:56%;background:var(--warning);"></div></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px;">28/50 人，距升级还需 22 人</div>
+          </div>
+        </div>
+
+        <!-- 月度竞赛 -->
+        <div style="background:linear-gradient(135deg,#141414,#1a1a2e);border-radius:10px;padding:20px;color:#fff;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <span style="font-size:16px;">🏆</span>
+            <div>
+              <div style="font-weight:700;">2025年2月 代理月度竞赛</div>
+              <div style="font-size:12px;opacity:.6;">比拼本月带来的付费用户数 · 5 天后结算</div>
+            </div>
+          </div>
+          <table style="width:100%;font-size:12px;border-collapse:collapse;">
+            <thead><tr style="opacity:.6;"><th style="text-align:left;padding:4px 8px;">排名</th><th style="padding:4px 8px;">代理</th><th style="padding:4px 8px;">本月推荐</th><th style="text-align:right;padding:4px 8px;">奖励</th></tr></thead>
+            <tbody>
+              <tr style="background:rgba(255,215,0,.12);"><td style="padding:8px;font-size:14px;">🥇</td><td style="padding:8px;">quant_blogger</td><td style="padding:8px;color:#52c41a;font-weight:700;">47 人</td><td style="padding:8px;text-align:right;color:#ffd700;">$500 + 12月VIP</td></tr>
+              <tr style="background:rgba(255,255,255,.05);"><td style="padding:8px;font-size:14px;">🥈</td><td style="padding:8px;">crypto_kol_88</td><td style="padding:8px;color:#52c41a;font-weight:700;">31 人</td><td style="padding:8px;text-align:right;color:#c0c0c0;">$300 + 6月VIP</td></tr>
+              <tr style="background:rgba(255,255,255,.05);"><td style="padding:8px;font-size:14px;">🥉</td><td style="padding:8px;">web3_media_x</td><td style="padding:8px;color:#52c41a;font-weight:700;">24 人</td><td style="padding:8px;text-align:right;color:#cd7f32;">$200 + 3月VIP</td></tr>
+              <tr style="border-top:1px solid rgba(255,255,255,.1);"><td style="padding:8px;color:#1677ff;font-weight:700;">4th</td><td style="padding:8px;background:rgba(22,119,255,.15);font-weight:700;">你（我的账号）</td><td style="padding:8px;color:#52c41a;font-weight:700;">18 人</td><td style="padding:8px;text-align:right;opacity:.6;">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 推广工具 -->
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;">推广工具</div>
+        <div class="wf-row">
+          <div class="wf-card flex1">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px;">专属邀请链接</div>
+            <div style="display:flex;gap:8px;">
+              <div class="wf-input" style="flex:1;background:var(--bg2);font-family:monospace;font-size:11px;">https://openquant.co/r/AGNT28X</div>
+              <button class="wf-btn primary" style="height:32px;">复制</button>
+            </div>
+          </div>
+          <div class="wf-card flex1">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px;">推广素材下载</div>
+            <div style="display:flex;gap:6px;">
+              <button class="wf-btn default" style="height:28px;font-size:11px;">🖼️ Banner 图</button>
+              <button class="wf-btn default" style="height:28px;font-size:11px;">📝 推广文案</button>
+              <button class="wf-btn default" style="height:28px;font-size:11px;">📊 数据报表</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 21天实战营 ─── -->
+  <div class="section" data-cat="ops" id="o-camp">
+    <div class="section-header">
+      <h2>21 天量化实战营</h2>
+      <span class="badge badge-ops">📣 运营功能</span>
+    </div>
+    <div class="annotation" style="background:#fff0f6;border-color:#ffadd2;color:#9e1068;">
+      💡 <span>面向学生和求职者，提供实习证明 + 内推服务。通过21天课程培养学员，形成教育品牌，带动精准用户留存与口碑传播。</span>
+    </div>
+    <div class="section-desc">
+      学员完成全部课程、累计运行代码 &gt;200 小时、提交 3 个策略（含回测 + 实盘 Log），并参与 1 次社区分享，即可获得 OpenQuant 实习证明。课程定价约 <b>$299</b>，未来可升级为系列付费课程（$199–$999）。
+    </div>
+    <div class="wireframe">
+      <div class="wireframe-bar">
+        <span class="wf-title">21天量化实战营 · 我的进度</span>
+        <span style="background:rgba(255,255,255,.15);padding:2px 8px;border-radius:4px;font-size:11px;">第 12 天 / 21 天</span>
+      </div>
+      <div class="wf-body">
+        <div style="display:flex;gap:16px;">
+          <!-- 左：进度 -->
+          <div style="flex:1;">
+            <!-- 总进度 -->
+            <div class="wf-card" style="margin-bottom:12px;">
+              <div style="font-size:13px;font-weight:600;margin-bottom:12px;">🎯 结营证书进度</div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;"><span>✅ 课程完成度</span><span style="font-weight:600;color:var(--success);">12/21 天</span></div>
+                  <div class="progress" style="margin-top:4px;height:8px;"><div class="progress-fill" style="width:57%;background:var(--success);"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;"><span>⏱️ 代码运行时长</span><span style="font-weight:600;color:var(--primary);">134 / 200 小时</span></div>
+                  <div class="progress" style="margin-top:4px;height:8px;"><div class="progress-fill" style="width:67%;background:var(--primary);"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;"><span>📦 策略提交</span><span style="font-weight:600;color:var(--warning);">2 / 3 个</span></div>
+                  <div class="progress" style="margin-top:4px;height:8px;"><div class="progress-fill" style="width:66%;background:var(--warning);"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;"><span>🎤 社区分享</span><span style="font-weight:600;color:var(--danger);">0 / 1 次</span></div>
+                  <div class="progress" style="margin-top:4px;height:8px;"><div class="progress-fill" style="width:0%;background:var(--danger);"></div></div>
+                </div>
+              </div>
+              <div style="background:#fffbe6;border:1px solid #ffe58f;border-radius:6px;padding:10px;margin-top:12px;font-size:12px;color:#874d00;">
+                ⏰ 按当前进度，预计 <b>第17天</b> 可满足结营条件，还需完成：1次社区分享 + 1个策略提交
+              </div>
+            </div>
+
+            <!-- 本周课程 -->
+            <div class="wf-card">
+              <div style="font-size:13px;font-weight:600;margin-bottom:10px;">📅 本周课程（第3周）</div>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+                <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg2);border-radius:6px;">
+                  <span style="color:var(--success);">✅</span>
+                  <span>Day 15 · 风控系统设计与止损策略</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--primary-light);border:1px solid var(--primary);border-radius:6px;">
+                  <span style="color:var(--primary);font-weight:600;">▶</span>
+                  <span style="font-weight:600;color:var(--primary);">Day 16 · 实盘部署与托管者配置（今日）</span>
+                  <button class="wf-btn primary" style="height:24px;font-size:11px;margin-left:auto;">开始学习</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border);border-radius:6px;">
+                  <span style="color:var(--text3);">🔒</span>
+                  <span style="color:var(--text3);">Day 17 · 绩效分析与报告生成</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右：证书 + 社区 -->
+          <div style="width:220px;flex-shrink:0;">
+            <div class="wf-card" style="margin-bottom:12px;text-align:center;">
+              <div style="font-size:13px;font-weight:600;margin-bottom:8px;">🏅 结营证书预览</div>
+              <div style="border:2px solid var(--border);border-radius:8px;padding:20px;background:linear-gradient(135deg,#f0f5ff,#e6f4ff);">
+                <div style="font-size:11px;color:var(--text3);">OpenQuant</div>
+                <div style="font-size:14px;font-weight:700;color:var(--primary);margin:4px 0;">量化实战营结营证书</div>
+                <div style="font-size:11px;color:var(--text3);">学员：Lin **</div>
+                <div style="font-size:11px;color:var(--text3);">完成日期：--</div>
+                <div style="margin-top:10px;color:var(--text3);font-size:28px;">🔒</div>
+                <div style="font-size:11px;color:var(--text3);">完成所有要求后解锁</div>
+              </div>
+            </div>
+            <div class="wf-card">
+              <div style="font-size:13px;font-weight:600;margin-bottom:8px;">👥 同期学员 (本期 24 人)</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">L</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:#722ed1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">W</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--success);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">Z</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:#fa8c16;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">C</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:#eb2f96;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">M</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--text3);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;">+19</div>
+              </div>
+              <button class="wf-btn default" style="width:100%;margin-top:10px;height:28px;font-size:12px;justify-content:center;">💬 进入学员群</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 目标用户 + 长期价值 -->
+    <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="wf-card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;">🎯 目标用户 & 获客渠道</div>
+        <div style="font-size:12px;line-height:1.8;color:var(--text2);">
+          <div>📚 <b>大学社团</b>：联系量化/金融/区块链社团合作</div>
+          <div>📱 <b>小红书</b>：发笔记"我参加了 OpenQuant 实战营"</div>
+          <div>💬 <b>知乎</b>：发布招生文章，精准覆盖技术转行群体</div>
+          <div>🎓 <b>目标学员</b>：金融工程、计算机相关专业大学生</div>
+        </div>
+      </div>
+      <div class="wf-card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;">📈 长期商业价值</div>
+        <div style="font-size:12px;line-height:1.8;color:var(--text2);">
+          <div>💼 <b>To B 猎头费</b>：向企业收费 $2,000–$5,000/人</div>
+          <div>📖 <b>进阶课程</b>：$199–$999 付费课程序列</div>
+          <div>🏢 <b>企业定制培训</b>：$10,000+/期</div>
+          <div>🌟 <b>学员留存率</b>：99%（精准用户）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── Toast ── */
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  const colors = { success: '#52c41a', warning: '#faad14', error: '#ff4d4f', info: '#1677ff' };
+  t.style.background = colors[type] || '#1d2129';
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(20px)';
+  }, 2800);
+}
+
+/* ── Backtest Tabs ── */
+function switchBacktestTab(tab, el) {
+  ['basic','fee','advanced'].forEach(t => {
+    const panel = document.getElementById('bt-tab-' + t);
+    if (panel) panel.style.display = t === tab ? '' : 'none';
+  });
+  el.closest('.wf-tabs').querySelectorAll('.wf-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (tab === 'advanced') showToast('🔒 高级配置需要 Pro 会员，部分字段已锁定', 'warning');
+}
+
+/* ── Save Config ── */
+function saveConfig() {
+  showToast('✅ 回测配置已保存', 'success');
+}
+
+/* ── Run Backtest ── */
+function runBacktest() {
+  const btn = document.getElementById('btn-run-backtest');
+  const wrap = document.getElementById('backtest-progress-wrap');
+  const bar = document.getElementById('backtest-progress-bar');
+  const label = document.getElementById('backtest-progress-label');
+  const pct = document.getElementById('backtest-progress-pct');
+  const report = document.getElementById('backtest-report');
+
+  // Disable button + show progress
+  btn.disabled = true;
+  btn.textContent = '⏳ 回测中...';
+  btn.style.opacity = '.6';
+  wrap.style.display = 'flex';
+  report.style.display = 'none';
+
+  const steps = [
+    { p: 8,  text: '加载历史 K 线数据...' },
+    { p: 22, text: '初始化策略引擎...' },
+    { p: 40, text: '回放 2024-01 ~ 2024-04...' },
+    { p: 58, text: '回放 2024-05 ~ 2024-08...' },
+    { p: 75, text: '回放 2024-09 ~ 2024-12...' },
+    { p: 88, text: '计算绩效指标...' },
+    { p: 96, text: '生成回测报告...' },
+    { p: 100, text: '回测完成 ✓' },
+  ];
+
+  let i = 0;
+  function tick() {
+    if (i >= steps.length) {
+      // Done
+      setTimeout(() => {
+        wrap.style.display = 'none';
+        btn.disabled = false;
+        btn.textContent = '▶ 重新回测';
+        btn.style.opacity = '1';
+        report.style.display = 'block';
+        // Scroll to report
+        const top = report.getBoundingClientRect().top + window.pageYOffset - 80;
+        window.scrollTo({ top, behavior: 'smooth' });
+        showToast('✅ 回测完成，总收益 +38.5%，夏普比率 1.85', 'success');
+      }, 600);
+      return;
+    }
+    const s = steps[i++];
+    bar.style.width = s.p + '%';
+    label.textContent = s.text;
+    pct.textContent = s.p + '%';
+    setTimeout(tick, i === steps.length ? 300 : 380 + Math.random() * 220);
+  }
+  tick();
+}
+
+/* ── Navigation ── */
+function toggleSidebar() {
+  const sb = document.querySelector('.sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  const btn = document.getElementById('hamBtn');
+  const open = sb.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  ov.classList.toggle('show', open);
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('hamBtn').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+function goTo(id, el) {
+  const target = document.getElementById(id);
+  if (target) {
+    const top = target.getBoundingClientRect().top + window.pageYOffset - 72;
+    window.scrollTo({ top: top, behavior: 'smooth' });
+  }
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  closeSidebar();
+}
+
+// Highlight active nav item on scroll
+const allSections = Array.from(document.querySelectorAll('.section'));
+window.addEventListener('scroll', () => {
+  const scrollY = window.pageYOffset + 100;
+  let current = null;
+  allSections.forEach(s => {
+    if (!s.classList.contains('hidden') && s.offsetTop <= scrollY) current = s.id;
+  });
+  if (current) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const active = document.querySelector('.nav-item[data-target="' + current + '"]');
+    if (active) active.classList.add('active');
+  }
+});
+
+/* ── Dark Mode ── */
+function toggleDark() {
+  const isDark = document.body.classList.toggle('dark');
+  const btn = document.getElementById('darkBtn');
+  btn.classList.toggle('on', isDark);
+  localStorage.setItem('oq-dark', isDark ? '1' : '');
+}
+// Restore preference
+(function(){
+  if (localStorage.getItem('oq-dark')) {
+    document.body.classList.add('dark');
+    document.getElementById('darkBtn').classList.add('on');
+  }
+})();
+
+/* ── Section Filter ── */
+let activeFilter = 'all';
+function filterSections(cat, el) {
+  activeFilter = cat;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+
+  document.querySelectorAll('.section').forEach(s => {
+    const sc = s.getAttribute('data-cat');
+    if (cat === 'all' || sc === cat || sc === 'overview') {
+      s.classList.remove('hidden');
+    } else {
+      s.classList.add('hidden');
+    }
+  });
+
+  // Show/hide nav group items and section dividers
+  document.querySelectorAll('.nav-item[data-target]').forEach(n => {
+    const id = n.getAttribute('data-target');
+    const sec = document.getElementById(id);
+    if (sec) n.style.display = sec.classList.contains('hidden') ? 'none' : '';
+  });
+}
+</script>
+</body>
+</html>
+
+
